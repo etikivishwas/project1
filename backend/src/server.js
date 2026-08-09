@@ -9,15 +9,12 @@ dotenv.config();
 
 const app = express();
 
-
 // =====================================================
 // MIDDLEWARE
 // =====================================================
 
 app.use(cors());
-
 app.use(express.json());
-
 
 // =====================================================
 // BASIC ROUTE
@@ -30,13 +27,11 @@ app.get("/", (req, res) => {
   });
 });
 
-
 // =====================================================
 // VENDOR ROUTES
 // =====================================================
 
 app.use("/api/vendors", vendorRoutes);
-
 
 // =====================================================
 // START SERVER
@@ -46,7 +41,6 @@ const PORT = process.env.PORT || 5000;
 
 async function startServer() {
   try {
-
     // Test MySQL connection
     const connection = await db.getConnection();
 
@@ -56,14 +50,11 @@ async function startServer() {
 
     // Start backend server
     app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
+      console.log(`Server running on port ${PORT}`);
     });
-
   } catch (error) {
-
     console.error("MySQL connection failed!");
     console.error(error.message);
-
   }
 }
 
