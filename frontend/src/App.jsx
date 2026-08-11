@@ -13,7 +13,7 @@ import ForgotPassword from "./components/ForgotPassword";
 import ResetPassword from "./components/ResetPassword";
 
 import UserScreen from "./pages/UserScreen/userScreen.jsx";
-import UserHistory from "./pages/UserHistory/userHistory.jsx";
+import UserHistory from "./pages/userHistory/userHistory.jsx";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
