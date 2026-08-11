@@ -1,7 +1,123 @@
+import React from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+
+import Login from "./pages/LoginPage/Login.jsx";
+import Signup from "./components/Signup";
+import VerifyOtp from "./components/VerifyOtp";
+import ForgotPassword from "./components/ForgotPassword";
+import ResetPassword from "./components/ResetPassword";
+
 import UserScreen from "./pages/UserScreen/userScreen.jsx";
+import UserHistory from "./pages/UserHistory/userHistory.jsx";
+
+import ProtectedRoute from "./components/ProtectedRoute";
+
+import "./theme.css";
+
 
 function App() {
-  return <UserScreen />;
+  return (
+    <BrowserRouter>
+
+      <Routes>
+
+        {/* =========================================
+            DEFAULT
+            ========================================= */}
+
+        <Route
+          path="/"
+          element={
+            <Navigate
+              to="/login"
+              replace
+            />
+          }
+        />
+
+
+        {/* =========================================
+            AUTHENTICATION ROUTES
+            ========================================= */}
+
+        <Route
+          path="/login"
+          element={<Login />}
+        />
+
+        <Route
+          path="/signup"
+          element={<Signup />}
+        />
+
+        <Route
+          path="/verify-otp"
+          element={<VerifyOtp />}
+        />
+
+        <Route
+          path="/forgot-password"
+          element={<ForgotPassword />}
+        />
+
+        <Route
+          path="/reset-password"
+          element={<ResetPassword />}
+        />
+
+
+        {/* =========================================
+            USER HOME
+            ========================================= */}
+
+        <Route
+          path="/userScreen"
+          element={
+            <ProtectedRoute>
+              <UserScreen />
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* =========================================
+            USER SERVICE HISTORY
+            ========================================= */}
+
+        <Route
+          path="/userHistory"
+          element={
+            <ProtectedRoute>
+              <UserHistory />
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* =========================================
+            UNKNOWN ROUTES
+            ========================================= */}
+
+        <Route
+          path="*"
+          element={
+            <Navigate
+              to="/userScreen"
+              replace
+            />
+          }
+        />
+
+      </Routes>
+
+    </BrowserRouter>
+  );
 }
+
 
 export default App;

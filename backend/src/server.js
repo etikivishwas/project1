@@ -1,11 +1,12 @@
+require("dotenv").config();
+
 const express = require("express");
-const dotenv = require("dotenv");
 const cors = require("cors");
 
 const db = require("./config/database");
 const vendorRoutes = require("./routes/vendorRoutes");
-
-dotenv.config();
+const authRoutes = require("./routes/authRoutes");
+const historyRoutes = require("./routes/history.routes");
 
 const app = express();
 
@@ -13,7 +14,13 @@ const app = express();
 // MIDDLEWARE
 // =====================================================
 
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 // =====================================================
@@ -28,6 +35,22 @@ app.get("/", (req, res) => {
 });
 
 // =====================================================
+// HEALTH CHECK
+// =====================================================
+
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "ok",
+  });
+});
+
+// =====================================================
+// AUTH ROUTES
+// =====================================================
+
+app.use("/api/auth", authRoutes);
+
+// =====================================================
 // VENDOR ROUTES
 // =====================================================
 
@@ -36,6 +59,11 @@ app.use("/api/vendors", vendorRoutes);
 // =====================================================
 // START SERVER
 // =====================================================
+
+app.use(
+  "/api/history",
+  historyRoutes
+);
 
 const PORT = process.env.PORT || 5000;
 

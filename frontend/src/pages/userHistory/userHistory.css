@@ -1,0 +1,696 @@
+/* =====================================================
+   GLOBAL
+   ===================================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+.history-app {
+  width: 100%;
+  min-height: 100vh;
+
+  background: #f7f8fc;
+
+  color: #10243a;
+
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  padding-bottom: 76px;
+}
+
+
+/* =====================================================
+   HEADER
+   ===================================================== */
+
+.history-header {
+  width: 100%;
+
+  height: 47px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 12px;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #e1e4ea;
+
+  position: sticky;
+  top: 0;
+
+  z-index: 100;
+}
+
+
+/* BRAND */
+
+.history-brand {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+}
+
+
+.history-logo {
+  width: 23px;
+  height: 23px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #061a2d;
+
+  color: #ffffff;
+
+  font-size: 9px;
+  font-weight: 800;
+}
+
+
+.history-brand span {
+  font-size: 15px;
+
+  font-weight: 800;
+
+  letter-spacing: -0.2px;
+
+  color: #071a2d;
+}
+
+
+/* PROFILE */
+
+.history-profile-button {
+  width: 25px;
+  height: 25px;
+
+  padding: 0;
+
+  border: none;
+
+  background: transparent;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #071a2d;
+
+  cursor: pointer;
+}
+
+
+.history-profile-button svg {
+  width: 15px;
+  height: 15px;
+}
+
+
+/* =====================================================
+   MAIN CONTENT
+   ===================================================== */
+
+.history-content {
+  width: 100%;
+
+  max-width: 500px;
+
+  margin: 0 auto;
+
+  padding: 11px 11px 20px;
+}
+
+
+/* =====================================================
+   INTRO
+   ===================================================== */
+
+.history-intro {
+  margin-bottom: 17px;
+}
+
+
+.history-intro h1 {
+  margin: 0 0 5px;
+
+  font-size: 17px;
+
+  line-height: 1.25;
+
+  font-weight: 700;
+
+  color: #071a2d;
+}
+
+
+.history-intro p {
+  margin: 0;
+
+  max-width: 340px;
+
+  font-size: 11.5px;
+
+  line-height: 1.45;
+
+  color: #4f5e70;
+}
+
+
+/* =====================================================
+   FILTERS
+   ===================================================== */
+
+.history-filters {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 5px;
+
+  margin-bottom: 20px;
+
+  overflow-x: auto;
+
+  scrollbar-width: none;
+}
+
+
+.history-filters::-webkit-scrollbar {
+  display: none;
+}
+
+
+.history-filter {
+  height: 29px;
+
+  padding: 0 12px;
+
+  flex-shrink: 0;
+
+  border-radius: 16px;
+
+  border: 1px solid #d5dbe3;
+
+  background: #ffffff;
+
+  color: #445468;
+
+  font-size: 10.5px;
+
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+
+.history-filter.active {
+  background: #10263b;
+
+  border-color: #10263b;
+
+  color: #ffffff;
+}
+
+
+/* =====================================================
+   HISTORY LIST
+   ===================================================== */
+
+.history-list {
+  width: 100%;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 10px;
+}
+
+
+/* =====================================================
+   HISTORY CARD
+   ===================================================== */
+
+.history-card {
+  width: 100%;
+
+  background: #ffffff;
+
+  border: 1px solid #dfe4eb;
+
+  border-radius: 8px;
+
+  padding: 11px;
+
+  box-shadow:
+    0 2px 7px rgba(20, 40, 60, 0.04);
+}
+
+
+/* =====================================================
+   CARD MAIN
+   ===================================================== */
+
+.history-card-main {
+  width: 100%;
+
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 9px;
+}
+
+
+/* =====================================================
+   IMAGE
+   ===================================================== */
+
+.history-image-wrapper {
+  width: 31px;
+  height: 38px;
+
+  flex-shrink: 0;
+
+  border-radius: 3px;
+
+  overflow: hidden;
+
+  background: #edf3ff;
+}
+
+
+.history-vendor-image {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+}
+
+
+/* =====================================================
+   VENDOR DETAILS
+   ===================================================== */
+
+.history-vendor-details {
+  min-width: 0;
+
+  flex: 1;
+}
+
+
+.history-vendor-row {
+  width: 100%;
+
+  display: flex;
+
+  align-items: flex-start;
+
+  justify-content: space-between;
+
+  gap: 5px;
+}
+
+
+.history-vendor-row h2 {
+  margin: 0;
+
+  max-width: 145px;
+
+  font-size: 14px;
+
+  line-height: 1.15;
+
+  font-weight: 700;
+
+  color: #071a2d;
+
+  overflow-wrap: break-word;
+}
+
+
+.history-service-name {
+  margin: 3px 0 0;
+
+  font-size: 9.5px;
+
+  line-height: 1.2;
+
+  color: #37475a;
+}
+
+
+/* =====================================================
+   STATUS
+   ===================================================== */
+
+.history-status {
+  flex-shrink: 0;
+
+  min-height: 21px;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 2px;
+
+  padding: 3px 6px;
+
+  border-radius: 4px;
+
+  font-size: 9px;
+
+  line-height: 1;
+
+  font-weight: 500;
+}
+
+
+.history-status.completed {
+  background: #54efa1;
+
+  color: #064f34;
+}
+
+
+.history-status.contacted {
+  background: #e3ebfa;
+
+  border: 1px solid #c8d5eb;
+
+  color: #19365c;
+}
+
+
+.history-status.confirmed {
+  background: #e5f1ff;
+
+  color: #164e7e;
+}
+
+
+.history-status.cancelled {
+  background: #ffe7e7;
+
+  color: #a12b2b;
+}
+
+
+.history-status svg {
+  width: 9px;
+  height: 9px;
+}
+
+
+/* =====================================================
+   DIVIDER
+   ===================================================== */
+
+.history-divider {
+  width: 100%;
+
+  height: 1px;
+
+  background: #e8ebef;
+
+  margin: 9px 0;
+}
+
+
+/* =====================================================
+   CARD BOTTOM
+   ===================================================== */
+
+.history-card-bottom {
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 8px;
+}
+
+
+/* DATE */
+
+.history-date {
+  display: flex;
+
+  align-items: center;
+
+  gap: 4px;
+
+  color: #455568;
+
+  font-size: 9px;
+
+  white-space: nowrap;
+}
+
+
+.history-date svg {
+  width: 11px;
+  height: 11px;
+}
+
+
+/* =====================================================
+   ACTION
+   ===================================================== */
+
+.history-action {
+  display: flex;
+
+  align-items: center;
+
+  gap: 3px;
+
+  padding: 0;
+
+  border: none;
+
+  background: transparent;
+
+  color: #007f62;
+
+  font-size: 9.5px;
+
+  font-weight: 500;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+}
+
+
+.history-action svg {
+  width: 10px;
+  height: 10px;
+}
+
+
+.history-action svg:last-child {
+  width: 11px;
+  height: 11px;
+}
+
+
+/* =====================================================
+   EMPTY STATE
+   ===================================================== */
+
+.history-empty {
+  min-height: 150px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 8px;
+
+  color: #738092;
+
+  font-size: 11px;
+}
+
+
+.history-empty svg {
+  width: 28px;
+  height: 28px;
+}
+
+
+/* =====================================================
+   BOTTOM NAVIGATION
+   ===================================================== */
+
+.history-bottom-navigation {
+  position: fixed;
+
+  bottom: 0;
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  width: 100%;
+
+  max-width: 500px;
+
+  height: 63px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-around;
+
+  padding: 5px 30px 4px;
+
+  background: #ffffff;
+
+  border-top: 1px solid #e2e5ea;
+
+  z-index: 200;
+}
+
+
+/* NAV ITEM */
+
+.history-nav-item {
+  width: 62px;
+
+  height: 54px;
+
+  border: none;
+
+  border-radius: 28px;
+
+  background: transparent;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 2px;
+
+  color: #3e4957;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+
+.history-nav-item svg {
+  width: 16px;
+  height: 16px;
+}
+
+
+.history-nav-item span {
+  font-size: 8.5px;
+
+  font-weight: 500;
+}
+
+
+/* ACTIVE */
+
+.history-nav-item.active {
+  background: #55f0a2;
+
+  color: #087052;
+}
+
+
+.history-nav-item.active span {
+  font-weight: 600;
+}
+
+
+/* =====================================================
+   RESPONSIVE
+   ===================================================== */
+
+
+/* 360px and smaller */
+
+@media (max-width: 360px) {
+
+  .history-content {
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+
+
+  .history-vendor-row h2 {
+    max-width: 125px;
+
+    font-size: 13px;
+  }
+
+
+  .history-status {
+    padding-left: 5px;
+    padding-right: 5px;
+
+    font-size: 8px;
+  }
+
+
+  .history-action {
+    font-size: 9px;
+  }
+
+
+  .history-filter {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+}
+
+
+/* 430px and above */
+
+@media (min-width: 431px) {
+
+  .history-app {
+    max-width: 500px;
+
+    margin: 0 auto;
+  }
+
+}

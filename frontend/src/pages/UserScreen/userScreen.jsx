@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import {
   FiSearch,
@@ -118,12 +119,13 @@ function UserScreen() {
   // ===================================================
   // STATE
   // ===================================================
-
+  const navigate = useNavigate();
   const [vendors, setVendors] = useState([]);
 
   const [loading, setLoading] = useState(true);
 
   const [error, setError] = useState("");
+
 
 
   // ===================================================
@@ -643,14 +645,10 @@ function UserScreen() {
 
         <button
           className="bottom-nav-item"
+          onClick={() => navigate("/userHistory")}
         >
-
           <FiClock />
-
-          <span>
-            History
-          </span>
-
+          <span>History</span>
         </button>
 
       </nav>
