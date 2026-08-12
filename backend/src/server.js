@@ -14,9 +14,25 @@ const app = express();
 // MIDDLEWARE
 // =====================================================
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.CLIENT_URL?.replace(/\/$/, ""),
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: function (origin, callback) {
+      // Allow requests without an origin
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   })
 );
@@ -57,13 +73,14 @@ app.use("/api/auth", authRoutes);
 app.use("/api/vendors", vendorRoutes);
 
 // =====================================================
-// START SERVER
+// HISTORY ROUTES
 // =====================================================
 
-app.use(
-  "/api/history",
-  historyRoutes
-);
+app.use("/api/history", historyRoutes);
+
+// =====================================================
+// START SERVER
+// =====================================================
 
 const PORT = process.env.PORT || 5000;
 
@@ -79,6 +96,7 @@ async function startServer() {
     // Start backend server
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
+      console.log("Allowed CORS origins:", allowedOrigins);
     });
   } catch (error) {
     console.error("MySQL connection failed!");
