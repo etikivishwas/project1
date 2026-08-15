@@ -195,6 +195,10 @@ function UserProfile() {
     navigate("/userHistory");
   };
 
+  const handleHelpSupport = () => {
+    navigate("/helpSupport");
+  }
+
   const handleSavedProviders = () => {
     console.log(
       "Saved Providers page not developed yet"
@@ -204,12 +208,6 @@ function UserProfile() {
   const handleSettings = () => {
     console.log(
       "Settings & Privacy page not developed yet"
-    );
-  };
-
-  const handleHelp = () => {
-    console.log(
-      "Help & Support page not developed yet"
     );
   };
 
@@ -444,7 +442,7 @@ function UserProfile() {
 
           <button
             className="profile-menu-item"
-            onClick={handleHelp}
+            onClick={handleHelpSupport}
           >
             <div className="profile-menu-left">
 
