@@ -266,46 +266,33 @@ function UserHistory() {
         <button
           className="history-profile-button"
           aria-label="Profile"
+          onClick={() => navigate("/userProfile")}
         >
-
           <FiUser />
-
         </button>
-
       </header>
-
 
       {/* =================================================
           MAIN CONTENT
           ================================================= */}
-
       <main className="history-content">
-
-
         {/* =================================================
             PAGE TITLE
             ================================================= */}
-
         <section className="history-intro">
-
           <h1>
             Service History
           </h1>
-
           <p>
             Review your past interactions and easily
             re-book trusted service providers.
           </p>
-
         </section>
-
 
         {/* =================================================
             FILTERS
             ================================================= */}
-
         <div className="history-filters">
-
           <button
             className={
               `history-filter ${
@@ -320,8 +307,6 @@ function UserHistory() {
           >
             All Services
           </button>
-
-
           <button
             className={
               `history-filter ${
@@ -336,8 +321,6 @@ function UserHistory() {
           >
             Completed
           </button>
-
-
           <button
             className={
               `history-filter ${
@@ -352,54 +335,36 @@ function UserHistory() {
           >
             Contacted
           </button>
-
         </div>
-
-
         {/* =================================================
             HISTORY LIST
             ================================================= */}
 
         <section className="history-list">
-
-
           {/* =================================================
               LOADING
               ================================================= */}
 
           {loading && (
-
             <div className="history-empty">
-
               <FiClock />
-
               <p>
                 Loading service history...
               </p>
-
             </div>
-
           )}
-
 
           {/* =================================================
               ERROR
               ================================================= */}
-
           {!loading && error && (
-
             <div className="history-empty">
-
               <FiClock />
-
               <p>
                 {error}
               </p>
-
             </div>
-
           )}
-
 
           {/* =================================================
               EMPTY
@@ -408,19 +373,13 @@ function UserHistory() {
           {!loading &&
             !error &&
             filteredHistory.length === 0 && (
-
               <div className="history-empty">
-
                 <FiClock />
-
                 <p>
                   No service history found.
                 </p>
-
               </div>
-
           )}
-
 
           {/* =================================================
               HISTORY CARDS
@@ -429,44 +388,31 @@ function UserHistory() {
           {!loading &&
             !error &&
             filteredHistory.map((item) => (
-
               <article
                 className="history-card"
                 key={item.id}
               >
-
 
                 {/* =========================================
                     TOP SECTION
                     ========================================= */}
 
                 <div className="history-card-main">
-
-
                   {/* VENDOR IMAGE */}
-
                   <div className="history-image-wrapper">
-
                     <img
                       src={item.image}
                       alt={item.vendorName}
                       className="history-vendor-image"
                     />
-
                   </div>
 
-
                   {/* VENDOR DETAILS */}
-
                   <div className="history-vendor-details">
-
                     <div className="history-vendor-row">
-
                       <h2>
                         {item.vendorName}
                       </h2>
-
-
                       <span
                         className={
                           `history-status ${
@@ -474,68 +420,44 @@ function UserHistory() {
                           }`
                         }
                       >
-
                         {item.status ===
                           "completed" && (
                           <FiCheckCircle />
                         )}
-
                         {getStatusText(
                           item.status
                         )}
-
                       </span>
-
                     </div>
-
-
                     <p className="history-service-name">
-
                       {item.serviceName}
-
                     </p>
-
                   </div>
-
                 </div>
-
-
                 {/* =========================================
                     DIVIDER
                     ========================================= */}
 
                 <div className="history-divider"></div>
-
-
                 {/* =========================================
                     BOTTOM SECTION
                     ========================================= */}
-
                 <div className="history-card-bottom">
-
-
                   {/* DATE */}
-
                   <div className="history-date">
-
                     <FiCalendar />
-
                     <span>
                       {item.serviceDate}
                     </span>
-
                   </div>
 
-
                   {/* ACTION */}
-
                   <button
                     className="history-action"
                     onClick={() =>
                       handleHistoryAction(item)
                     }
                   >
-
                     {(item.status ===
                       "contacted" ||
                       item.status ===
@@ -544,50 +466,33 @@ function UserHistory() {
                       <FiMessageSquare />
 
                     )}
-
                     <span>
                       {getActionText(
                         item.status
                       )}
                     </span>
-
                     <FiArrowRight />
-
                   </button>
-
                 </div>
-
               </article>
-
             ))}
-
         </section>
-
       </main>
-
 
       {/* =================================================
           BOTTOM NAVIGATION
           ================================================= */}
-
       <nav className="history-bottom-navigation">
-
-
         {/* HOME */}
-
         <button
           className="history-nav-item"
           onClick={handleHomeClick}
         >
-
           <FiHome />
-
           <span>
             Home
           </span>
-
         </button>
-
 
         {/* SEARCH */}
 
@@ -595,36 +500,23 @@ function UserHistory() {
           className="history-nav-item"
           onClick={handleSearchClick}
         >
-
           <FiSearch />
-
           <span>
             Search
           </span>
-
         </button>
-
-
         {/* HISTORY */}
-
         <button
           className="history-nav-item active"
           onClick={handleHistoryClick}
         >
-
           <FiClock />
-
           <span>
             History
           </span>
-
         </button>
-
-
       </nav>
-
     </div>
-
   );
 }
 

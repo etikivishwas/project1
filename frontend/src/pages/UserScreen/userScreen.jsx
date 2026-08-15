@@ -24,9 +24,7 @@ import {
   FaTruckMoving,
   FaSnowflake,
 } from "react-icons/fa";
-
 import "./userScreen.css";
-
 
 // =====================================================
 // API URL
@@ -34,7 +32,6 @@ import "./userScreen.css";
 
 const API_URL =
   import.meta.env.VITE_API_URL || "http://localhost:5000";
-
 
 // =====================================================
 // CATEGORIES
@@ -83,7 +80,6 @@ const categories = [
   },
 ];
 
-
 // =====================================================
 // FEATURED VENDORS
 // =====================================================
@@ -109,168 +105,104 @@ const featuredVendors = [
   },
 ];
 
-
 // =====================================================
 // USER SCREEN
 // =====================================================
 
 function UserScreen() {
-
   // ===================================================
   // STATE
   // ===================================================
   const navigate = useNavigate();
   const [vendors, setVendors] = useState([]);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
-
-
 
   // ===================================================
   // FETCH VENDORS
   // ===================================================
 
   useEffect(() => {
-
     const fetchVendors = async () => {
-
       try {
-
         setLoading(true);
-
         setError("");
-
-
         const response = await fetch(
           `${API_URL}/api/vendors`
         );
-
-
         if (!response.ok) {
-
           throw new Error(
             `Failed to fetch vendors. Status: ${response.status}`
           );
-
         }
-
-
         const result = await response.json();
-
-
         console.log("Vendor API response:", result);
-
-
         if (result.success) {
-
           setVendors(result.data || []);
-
         } else {
-
           throw new Error(
             result.message || "Failed to fetch vendors"
           );
-
         }
-
       } catch (error) {
-
         console.error("Error fetching vendors:", error);
-
         setError(
           "Unable to load vendors. Please try again."
         );
-
       } finally {
-
         setLoading(false);
-
       }
-
     };
-
-
     fetchVendors();
-
   }, []);
-
-
   // ===================================================
   // CATEGORY CLICK
   // ===================================================
 
   const handleCategoryClick = (category) => {
-
     console.log(
       "Selected category:",
       category.name
     );
-
   };
-
-
   // ===================================================
   // SEARCH
   // ===================================================
 
   const handleSearch = (event) => {
-
     event.preventDefault();
-
-
     const searchValue =
       event.target.search.value.trim();
-
-
     if (!searchValue) {
       return;
     }
-
-
     console.log("Search:", searchValue);
-
   };
-
-
   // ===================================================
   // RENDER
   // ===================================================
 
   return (
-
     <div className="app-container">
-
-
       {/* =================================================
           HEADER
           ================================================= */}
 
       <header className="home-header">
-
         <div className="brand">
-
           <div className="brand-logo">
             <span>M</span>
           </div>
-
           <h1>Milieu Global</h1>
-
         </div>
-
-
         <button
           className="profile-button"
           aria-label="Profile"
+          onClick={() => navigate("/userProfile")}
         >
-
           <FiUser />
-
         </button>
-
       </header>
-
 
       {/* =================================================
           MAIN CONTENT
