@@ -1,4 +1,8 @@
-import React from "react";
+import React, {
+  useEffect,
+  useState,
+} from "react";
+
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -11,14 +15,159 @@ import {
   FiLogOut,
   FiHome,
   FiSearch,
-  FiMapPin,
 } from "react-icons/fi";
 
 import { FaStore } from "react-icons/fa";
+
 import "./UserProfile.css";
 
 function UserProfile() {
   const navigate = useNavigate();
+
+  // =====================================================
+  // STATE
+  // =====================================================
+
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // =====================================================
+  // API URL
+  // =====================================================
+
+  const API_URL =
+    import.meta.env.VITE_API_URL ||
+    "http://localhost:5000";
+
+  // =====================================================
+  // GET CURRENT TOKEN
+  // =====================================================
+
+  const getToken = () => {
+    return (
+      localStorage.getItem("token") ||
+      sessionStorage.getItem("token")
+    );
+  };
+
+  // =====================================================
+  // FETCH CURRENT LOGGED-IN USER
+  // =====================================================
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const token = getToken();
+
+        // -------------------------------------------------
+        // NO TOKEN
+        // -------------------------------------------------
+
+        if (!token) {
+          navigate("/login");
+          return;
+        }
+
+        // -------------------------------------------------
+        // GET CURRENT USER
+        // -------------------------------------------------
+
+        const response = await fetch(
+          `${API_URL}/api/auth/me`,
+          {
+            method: "GET",
+
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        // -------------------------------------------------
+        // TOKEN EXPIRED / INVALID
+        // -------------------------------------------------
+
+        if (
+          response.status === 401 ||
+          response.status === 403
+        ) {
+          localStorage.removeItem("token");
+          sessionStorage.removeItem("token");
+
+          navigate("/login");
+          return;
+        }
+
+        // -------------------------------------------------
+        // OTHER ERROR
+        // -------------------------------------------------
+
+        if (!response.ok) {
+          const errorData =
+            await response.json().catch(() => ({}));
+
+          throw new Error(
+            errorData.message ||
+              "Failed to load profile."
+          );
+        }
+
+        // -------------------------------------------------
+        // RESPONSE
+        // -------------------------------------------------
+
+        const data = await response.json();
+
+        setUser(data.user);
+
+      } catch (err) {
+        console.error(
+          "Failed to fetch current user:",
+          err
+        );
+
+        setError(
+          err.message ||
+            "Failed to load profile."
+        );
+
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCurrentUser();
+  }, [navigate, API_URL]);
+
+  // =====================================================
+  // GET USER INITIALS
+  // =====================================================
+
+  const getInitials = (name) => {
+    if (!name) {
+      return "U";
+    }
+
+    const parts = name
+      .trim()
+      .split(/\s+/);
+
+    if (parts.length === 1) {
+      return parts[0]
+        .charAt(0)
+        .toUpperCase();
+    }
+
+    return (
+      parts[0].charAt(0) +
+      parts[parts.length - 1].charAt(0)
+    ).toUpperCase();
+  };
 
   // =====================================================
   // NAVIGATION HANDLERS
@@ -27,44 +176,157 @@ function UserProfile() {
   const handleBack = () => {
     navigate("/userScreen");
   };
+
   const handleHome = () => {
     navigate("/userScreen");
   };
+
   const handleSearch = () => {
-    console.log("Search page not developed yet");
+    console.log(
+      "Search page not developed yet"
+    );
   };
+
   const handleHistory = () => {
     navigate("/userHistory");
   };
+
   const handleServiceHistory = () => {
     navigate("/userHistory");
   };
+
   const handleSavedProviders = () => {
-    console.log("Saved Providers page not developed yet");
+    console.log(
+      "Saved Providers page not developed yet"
+    );
   };
+
   const handleSettings = () => {
-    console.log("Settings & Privacy page not developed yet");
+    console.log(
+      "Settings & Privacy page not developed yet"
+    );
   };
+
   const handleHelp = () => {
-    console.log("Help & Support page not developed yet");
+    console.log(
+      "Help & Support page not developed yet"
+    );
   };
+
   const handleVendorRegistration = () => {
-    console.log("Join as a Vendor page not developed yet");
+    console.log(
+      "Join as a Vendor page not developed yet"
+    );
   };
+
+  // =====================================================
+  // LOGOUT
+  // =====================================================
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     sessionStorage.removeItem("token");
+
     navigate("/login");
   };
 
+  // =====================================================
+  // LOADING
+  // =====================================================
+
+  if (loading) {
+    return (
+      <div className="profile-page">
+
+        <header className="profile-header">
+          <button
+            className="profile-back-button"
+            onClick={handleBack}
+            aria-label="Go back"
+          >
+            <FiArrowLeft />
+          </button>
+
+          <h1>My Profile</h1>
+        </header>
+
+        <main className="profile-content">
+
+          <section className="profile-info">
+
+            <div className="profile-avatar">
+              U
+            </div>
+
+            <h2>
+              Loading...
+            </h2>
+
+          </section>
+
+        </main>
+
+      </div>
+    );
+  }
+
+  // =====================================================
+  // ERROR
+  // =====================================================
+
+  if (error) {
+    return (
+      <div className="profile-page">
+
+        <header className="profile-header">
+          <button
+            className="profile-back-button"
+            onClick={handleBack}
+            aria-label="Go back"
+          >
+            <FiArrowLeft />
+          </button>
+
+          <h1>My Profile</h1>
+        </header>
+
+        <main className="profile-content">
+
+          <section className="profile-info">
+
+            <div className="profile-avatar">
+              U
+            </div>
+
+            <h2>
+              Unable to load profile
+            </h2>
+
+            <p>
+              {error}
+            </p>
+
+          </section>
+
+        </main>
+
+      </div>
+    );
+  }
+
+  // =====================================================
+  // PROFILE
+  // =====================================================
+
   return (
     <div className="profile-page">
+
       {/* =================================================
           HEADER
           ================================================= */}
 
       <header className="profile-header">
+
         <button
           className="profile-back-button"
           onClick={handleBack}
@@ -72,9 +334,11 @@ function UserProfile() {
         >
           <FiArrowLeft />
         </button>
+
         <h1>
           My Profile
         </h1>
+
       </header>
 
 
@@ -84,7 +348,6 @@ function UserProfile() {
 
       <main className="profile-content">
 
-
         {/* =================================================
             PROFILE INFORMATION
             ================================================= */}
@@ -92,24 +355,12 @@ function UserProfile() {
         <section className="profile-info">
 
           <div className="profile-avatar">
-            TV
+            {getInitials(user?.name)}
           </div>
-
 
           <h2>
-            Teja Vasu
+            {user?.name || "User"}
           </h2>
-
-
-          <div className="profile-location">
-
-            <FiMapPin />
-
-            <span>
-              Kondapur, Hyderabad
-            </span>
-
-          </div>
 
         </section>
 
@@ -120,14 +371,12 @@ function UserProfile() {
 
         <section className="profile-menu">
 
-
           {/* SERVICE HISTORY */}
 
           <button
             className="profile-menu-item"
             onClick={handleServiceHistory}
           >
-
             <div className="profile-menu-left">
 
               <FiClock />
@@ -137,7 +386,6 @@ function UserProfile() {
               </span>
 
             </div>
-
 
             <FiChevronRight
               className="profile-menu-arrow"
@@ -152,7 +400,6 @@ function UserProfile() {
             className="profile-menu-item"
             onClick={handleSavedProviders}
           >
-
             <div className="profile-menu-left">
 
               <FiBookmark />
@@ -162,7 +409,6 @@ function UserProfile() {
               </span>
 
             </div>
-
 
             <FiChevronRight
               className="profile-menu-arrow"
@@ -177,7 +423,6 @@ function UserProfile() {
             className="profile-menu-item"
             onClick={handleSettings}
           >
-
             <div className="profile-menu-left">
 
               <FiSettings />
@@ -187,7 +432,6 @@ function UserProfile() {
               </span>
 
             </div>
-
 
             <FiChevronRight
               className="profile-menu-arrow"
@@ -202,7 +446,6 @@ function UserProfile() {
             className="profile-menu-item"
             onClick={handleHelp}
           >
-
             <div className="profile-menu-left">
 
               <FiHelpCircle />
@@ -212,7 +455,6 @@ function UserProfile() {
               </span>
 
             </div>
-
 
             <FiChevronRight
               className="profile-menu-arrow"
@@ -239,12 +481,10 @@ function UserProfile() {
 
           </div>
 
-
           <p>
             List your services and reach more clients
             in your area.
           </p>
-
 
           <button
             className="vendor-get-started"
@@ -273,7 +513,6 @@ function UserProfile() {
 
         </button>
 
-
       </main>
 
 
@@ -283,14 +522,12 @@ function UserProfile() {
 
       <nav className="profile-bottom-navigation">
 
-
         {/* HOME */}
 
         <button
           className="profile-nav-item"
           onClick={handleHome}
         >
-
           <FiHome />
 
           <span>
@@ -306,7 +543,6 @@ function UserProfile() {
           className="profile-nav-item"
           onClick={handleSearch}
         >
-
           <FiSearch />
 
           <span>
@@ -322,7 +558,6 @@ function UserProfile() {
           className="profile-nav-item"
           onClick={handleHistory}
         >
-
           <FiClock />
 
           <span>
@@ -334,44 +569,7 @@ function UserProfile() {
       </nav>
 
     </div>
-
   );
 }
 
-
 export default UserProfile;
-
-// import React from "react";
-
-// function UserProfile() {
-
-//   console.log("🔥🔥🔥 NEW USER PROFILE COMPONENT IS RUNNING 🔥🔥🔥");
-
-//   return (
-//     <div
-//       style={{
-//         background: "blue",
-//         minHeight: "100vh",
-//         width: "100%",
-//         padding: "50px",
-//         boxSizing: "border-box",
-//       }}
-//     >
-//       <h1
-//         style={{
-//           color: "yellow",
-//           fontSize: "40px",
-//           fontWeight: "bold",
-//         }}
-//       >
-//         TEST USER PROFILE
-//       </h1>
-
-//       <p style={{ color: "white", fontSize: "25px" }}>
-//         THIS IS THE NEW FILE
-//       </p>
-//     </div>
-//   );
-// }
-
-// export default UserProfile;

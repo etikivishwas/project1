@@ -34,11 +34,14 @@ api.interceptors.request.use(
 // AUTH APIs
 // ===============================
 
-export const signup = (identifier, password) =>
-  api.post('/auth/signup', {
-    identifier,
-    password,
+export const signup = (name, email, mobile, password) => {
+  return api.post('/auth/signup', {
+    name,
+    email,
+    mobile,
+    password
   });
+};
 
 export const login = (identifier, password, rememberMe) =>
   api.post('/auth/login', {
