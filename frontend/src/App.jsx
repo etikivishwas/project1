@@ -14,7 +14,7 @@ import ResetPassword from "./components/ResetPassword";
 
 import UserScreen from "./pages/UserScreen/userScreen.jsx";
 import UserHistory from "./pages/userHistory/userHistory.jsx";
-import UserProfile from "./pages/UserProfile/UserProfile.jsx";
+import UserProfile from "./pages/userProfile/UserProfile.jsx";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
