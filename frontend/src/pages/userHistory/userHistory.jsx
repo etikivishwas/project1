@@ -125,9 +125,9 @@ function UserHistory() {
     activeFilter === "all"
       ? historyData
       : historyData.filter(
-          (item) =>
-            item.status === activeFilter
-        );
+        (item) =>
+          item.status === activeFilter
+      );
 
 
   // =====================================================
@@ -218,14 +218,9 @@ function UserHistory() {
 
   };
 
-
-  const handleSearchClick = () => {
-
-    console.log(
-      "Search page not developed yet"
-    );
-
-  };
+  const handleSearchChange = (event) => {
+    navigate("/vendorSearch");
+  }
 
 
   const handleHistoryClick = () => {
@@ -295,10 +290,9 @@ function UserHistory() {
         <div className="history-filters">
           <button
             className={
-              `history-filter ${
-                activeFilter === "all"
-                  ? "active"
-                  : ""
+              `history-filter ${activeFilter === "all"
+                ? "active"
+                : ""
               }`
             }
             onClick={() =>
@@ -309,10 +303,9 @@ function UserHistory() {
           </button>
           <button
             className={
-              `history-filter ${
-                activeFilter === "completed"
-                  ? "active"
-                  : ""
+              `history-filter ${activeFilter === "completed"
+                ? "active"
+                : ""
               }`
             }
             onClick={() =>
@@ -323,10 +316,9 @@ function UserHistory() {
           </button>
           <button
             className={
-              `history-filter ${
-                activeFilter === "contacted"
-                  ? "active"
-                  : ""
+              `history-filter ${activeFilter === "contacted"
+                ? "active"
+                : ""
               }`
             }
             onClick={() =>
@@ -379,7 +371,7 @@ function UserHistory() {
                   No service history found.
                 </p>
               </div>
-          )}
+            )}
 
           {/* =================================================
               HISTORY CARDS
@@ -415,15 +407,14 @@ function UserHistory() {
                       </h2>
                       <span
                         className={
-                          `history-status ${
-                            item.status
+                          `history-status ${item.status
                           }`
                         }
                       >
                         {item.status ===
                           "completed" && (
-                          <FiCheckCircle />
-                        )}
+                            <FiCheckCircle />
+                          )}
                         {getStatusText(
                           item.status
                         )}
@@ -461,11 +452,11 @@ function UserHistory() {
                     {(item.status ===
                       "contacted" ||
                       item.status ===
-                        "completed") && (
+                      "completed") && (
 
-                      <FiMessageSquare />
+                        <FiMessageSquare />
 
-                    )}
+                      )}
                     <span>
                       {getActionText(
                         item.status
@@ -498,7 +489,7 @@ function UserHistory() {
 
         <button
           className="history-nav-item"
-          onClick={handleSearchClick}
+          onClick={handleSearchChange}
         >
           <FiSearch />
           <span>

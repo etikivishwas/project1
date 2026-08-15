@@ -16,6 +16,7 @@ import UserScreen from "./pages/UserScreen/userScreen.jsx";
 import UserHistory from "./pages/userHistory/userHistory.jsx";
 import UserProfile from "./pages/userProfile/UserProfile.jsx";
 import HelpSupport from "./pages/HelpSupport/HelpSupport.jsx"
+import VendorSearch from "./pages/VendorSearch/VendorSearch.jsx";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -104,6 +105,14 @@ function App() {
           element={
             <ProtectedRoute>
               <HelpSupport />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendorSearch"
+          element={
+            <ProtectedRoute>
+              <VendorSearch />
             </ProtectedRoute>
           }
         />

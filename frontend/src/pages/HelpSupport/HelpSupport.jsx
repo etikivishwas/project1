@@ -100,9 +100,7 @@ function HelpSupport() {
   };
 
   const handleSearch = () => {
-    console.log(
-      "Search page not developed yet"
-    );
+    navigate("/vendorSearch");
   };
 
   const handleHistory = () => {

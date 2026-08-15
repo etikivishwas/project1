@@ -453,62 +453,50 @@
 .profile-bottom-navigation {
   position: fixed;
 
-  left: 50%;
   bottom: 0;
+  left: 0;
+  right: 0;
 
-  transform: translateX(-50%);
+  height: 70px;
 
-  width: 100%;
-  max-width: 500px;
+  background: rgba(255, 255, 255, 0.97);
 
-  height: 59px;
-
-  background: #ffffff;
-
-  border-top: 1px solid #e1e5eb;
+  border-top: 1px solid #e4e8ee;
 
   display: flex;
   align-items: center;
   justify-content: space-around;
 
-  box-sizing: border-box;
-
-  z-index: 100;
+  z-index: 1000;
 
   box-shadow:
-    0 -2px 8px rgba(11, 29, 51, 0.045);
+    0 -3px 15px rgba(0, 0, 0, 0.04);
 }
 
 
 /* Navigation item */
 
 .profile-nav-item {
-  width: 70px;
-  height: 50px;
+  width: 72px;
+
+  height: 58px;
 
   border: none;
-  outline: none;
 
   background: transparent;
 
-  padding: 0;
+  border-radius: 28px;
 
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 
-  gap: 2px;
+  gap: 3px;
 
-  color: #3e4753;
-
-  font-family: inherit;
+  color: #4b515a;
 
   cursor: pointer;
-
-  transition:
-    color 0.15s ease,
-    transform 0.15s ease;
 }
 
 
@@ -518,27 +506,23 @@
 
 
 .profile-nav-item:active {
-  transform: scale(0.96);
+  background: #5cf09d;
+  color: #08774e;
 }
 
 
 /* Navigation icon */
 
 .profile-nav-item svg {
-  width: 15px;
-  height: 15px;
-
-  stroke-width: 1.7;
+  font-size: 22px;
 }
 
 
 /* Navigation text */
 
 .profile-nav-item span {
-  font-size: 8px;
-  line-height: 10px;
-
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 

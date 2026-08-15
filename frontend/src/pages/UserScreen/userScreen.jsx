@@ -178,6 +178,10 @@ function UserScreen() {
     }
     console.log("Search:", searchValue);
   };
+
+  const handleSearchChange = (event) => {
+    navigate("/vendorSearch");
+  }
   // ===================================================
   // RENDER
   // ===================================================
@@ -564,6 +568,7 @@ function UserScreen() {
 
         <button
           className="bottom-nav-item"
+          onClick={handleSearchChange}
         >
 
           <FiSearch />
