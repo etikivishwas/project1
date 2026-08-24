@@ -17,6 +17,9 @@ import UserHistory from "./pages/userHistory/userHistory.jsx";
 import UserProfile from "./pages/userProfile/UserProfile.jsx";
 import HelpSupport from "./pages/HelpSupport/HelpSupport.jsx"
 import VendorSearch from "./pages/VendorSearch/VendorSearch.jsx";
+import VendorRegistration from "./pages/VendorRegistration/VendorRegistration.jsx";
+import VendorRegistrationPage2 from "./pages/VendorRegistrationPage2/VendorRegistration.jsx";
+import VendorRegistrationPage3 from "./pages/VendorRegistrationPage3/VendorRegistration.jsx";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -113,6 +116,30 @@ function App() {
           element={
             <ProtectedRoute>
               <VendorSearch />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendorRegistration"
+          element={
+            <ProtectedRoute>
+              <VendorRegistration />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendorRegistrationPage2"
+          element={
+            <ProtectedRoute>
+              <VendorRegistrationPage2 />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendorRegistrationPage3"
+          element={
+            <ProtectedRoute>
+              <VendorRegistrationPage3 />
             </ProtectedRoute>
           }
         />

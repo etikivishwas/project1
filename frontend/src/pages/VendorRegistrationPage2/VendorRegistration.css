@@ -1,0 +1,623 @@
+/* =========================================
+   PAGE
+========================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+.vendor-page {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  padding: 20px;
+
+  background-color: #f4f6f8;
+
+  /*
+    Subtle dotted background similar to
+    the provided design.
+  */
+  background-image: radial-gradient(
+    #d5dbe1 0.7px,
+    transparent 0.7px
+  );
+  background-size: 8px 8px;
+
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
+
+  color: #0d2438;
+}
+
+
+/* =========================================
+   MAIN CARD
+========================================= */
+
+.vendor-registration-card {
+  width: 100%;
+  max-width: 430px;
+
+  min-height: 760px;
+
+  background: #f8f9fc;
+
+  border: 1px solid #dce1e7;
+  border-radius: 9px;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 2px 5px rgba(15, 23, 42, 0.04),
+    0 8px 20px rgba(15, 23, 42, 0.04);
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.vendor-header {
+  height: 56px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 14px;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #e3e7eb;
+}
+
+.vendor-header h1 {
+  margin: 0;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  color: #102a43;
+
+  letter-spacing: -0.1px;
+}
+
+.back-button {
+  width: 28px;
+  height: 32px;
+
+  padding: 0;
+  margin-right: 5px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  background: transparent;
+
+  color: #18344b;
+
+  cursor: pointer;
+}
+
+.back-icon {
+  width: 18px;
+  height: 18px;
+}
+
+
+/* =========================================
+   PROGRESS
+========================================= */
+
+.progress-section {
+  padding: 22px 24px 0;
+}
+
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 8px;
+}
+
+.progress-labels span {
+  font-size: 8px;
+  font-weight: 500;
+
+  color: #102a43;
+}
+
+.progress-labels span:last-child {
+  color: #234d72;
+}
+
+.progress-track {
+  width: 100%;
+  height: 5px;
+
+  background: #d9e6f4;
+
+  border-radius: 10px;
+
+  overflow: hidden;
+}
+
+.progress-fill {
+  width: 66.66%;
+  height: 100%;
+
+  background: #061d30;
+
+  border-radius: 10px;
+}
+
+
+/* =========================================
+   FORM SECTION
+========================================= */
+
+.form-section {
+  margin: 19px 10px 0;
+  padding: 14px 13px 15px;
+
+  background: #ffffff;
+
+  border: 1px solid #e6e9ee;
+  border-radius: 7px;
+
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.02);
+}
+
+.form-section h2 {
+  margin: 0 0 12px;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  color: #0b2a42;
+}
+
+
+/* =========================================
+   FORM GROUP
+========================================= */
+
+.form-group {
+  margin-bottom: 9px;
+}
+
+.form-group label {
+  display: block;
+
+  margin-bottom: 4px;
+
+  font-size: 7px;
+  line-height: 1.2;
+
+  color: #263f55;
+
+  font-weight: 500;
+}
+
+.input-wrapper {
+  position: relative;
+
+  width: 100%;
+}
+
+.input-wrapper input {
+  padding-left: 30px;
+}
+
+.input-icon {
+  position: absolute;
+
+  left: 9px;
+  top: 50%;
+
+  width: 12px;
+  height: 12px;
+
+  transform: translateY(-50%);
+
+  color: #557084;
+
+  pointer-events: none;
+}
+
+
+/* =========================================
+   INPUTS
+========================================= */
+
+.form-group input {
+  width: 100%;
+  height: 28px;
+
+  padding: 0 9px;
+
+  border: 1px solid #d7dce4;
+  border-radius: 5px;
+
+  background: #f8f9fc;
+
+  outline: none;
+
+  font-family: inherit;
+  font-size: 8px;
+
+  color: #253b4e;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.form-group input::placeholder {
+  color: #738297;
+  opacity: 1;
+}
+
+.form-group input:hover {
+  border-color: #c3ccd7;
+}
+
+.form-group input:focus {
+  background: #ffffff;
+
+  border-color: #234f75;
+
+  box-shadow: 0 0 0 2px rgba(35, 79, 117, 0.08);
+}
+
+
+/* =========================================
+   CHECKBOX
+========================================= */
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+
+  margin-top: -3px;
+  margin-bottom: 10px;
+}
+
+.checkbox-group input {
+  width: 10px;
+  height: 10px;
+
+  margin: 0 5px 0 0;
+
+  accent-color: #123a59;
+
+  cursor: pointer;
+}
+
+.checkbox-group label {
+  margin: 0;
+
+  font-size: 7px;
+
+  color: #607184;
+
+  cursor: pointer;
+}
+
+
+/* =========================================
+   EMAIL
+========================================= */
+
+.email-group {
+  margin-bottom: 0;
+}
+
+
+/* =========================================
+   LOCATION SECTION
+========================================= */
+
+.location-section {
+  margin-top: 18px;
+
+  padding-bottom: 13px;
+}
+
+.location-section h2 {
+  margin-bottom: 11px;
+}
+
+.location-section .form-group {
+  margin-bottom: 8px;
+}
+
+.location-section .form-group:last-child {
+  margin-bottom: 0;
+}
+
+
+/* =========================================
+   LANDMARK LABEL
+========================================= */
+
+.label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 4px;
+}
+
+.label-row label {
+  margin-bottom: 0;
+}
+
+.label-row span {
+  font-size: 6px;
+  color: #697b8c;
+}
+
+
+/* =========================================
+   ACTION BUTTON
+========================================= */
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+
+  padding: 26px 9px 24px;
+}
+
+.next-button {
+  min-width: 84px;
+  height: 27px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+
+  padding: 0 12px;
+
+  border: none;
+  border-radius: 15px;
+
+  background: #001d31;
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 8px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 2px 5px rgba(0, 29, 49, 0.22);
+
+  transition:
+    transform 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.next-button svg {
+  width: 11px;
+  height: 11px;
+}
+
+.next-button:hover {
+  background: #07324e;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 4px 8px rgba(0, 29, 49, 0.25);
+}
+
+.next-button:active {
+  transform: translateY(0);
+}
+
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (min-width: 600px) {
+
+  .vendor-page {
+    padding: 30px;
+  }
+
+  .vendor-registration-card {
+    max-width: 430px;
+  }
+
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 480px) {
+
+  .vendor-page {
+    min-height: 100vh;
+
+    padding: 0;
+
+    background-color: #f4f6f8;
+
+    background-image: none;
+  }
+
+  .vendor-registration-card {
+    width: 100%;
+    max-width: none;
+
+    min-height: 100vh;
+
+    border: none;
+    border-radius: 0;
+
+    box-shadow: none;
+  }
+
+  .vendor-header {
+    height: 56px;
+
+    padding: 0 16px;
+  }
+
+  .vendor-header h1 {
+    font-size: 16px;
+  }
+
+  .progress-section {
+    padding: 20px 20px 0;
+  }
+
+  .progress-labels span {
+    font-size: 9px;
+  }
+
+  .progress-track {
+    height: 5px;
+  }
+
+  .form-section {
+    margin-left: 12px;
+    margin-right: 12px;
+
+    padding: 16px 14px 17px;
+  }
+
+  .form-section h2 {
+    font-size: 13px;
+  }
+
+  .form-group label {
+    font-size: 8px;
+  }
+
+  .form-group input {
+    height: 38px;
+
+    font-size: 12px;
+  }
+
+  .input-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .input-wrapper input {
+    padding-left: 34px;
+  }
+
+  .checkbox-group label {
+    font-size: 9px;
+  }
+
+  .checkbox-group input {
+    width: 13px;
+    height: 13px;
+  }
+
+  .label-row span {
+    font-size: 8px;
+  }
+
+  .form-actions {
+    padding: 28px 12px;
+  }
+
+  .next-button {
+    height: 36px;
+    min-width: 105px;
+
+    padding: 0 15px;
+
+    font-size: 11px;
+  }
+
+  .next-button svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+
+/* =========================================
+   SMALL MOBILE
+========================================= */
+
+@media (max-width: 360px) {
+
+  .progress-section {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .form-section {
+    margin-left: 10px;
+    margin-right: 10px;
+
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .form-section h2 {
+    font-size: 12px;
+  }
+
+  .form-group input {
+    height: 36px;
+
+    font-size: 11px;
+  }
+
+  .form-actions {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+}
+
+
+/* =========================================
+   LARGE SCREENS
+========================================= */
+
+@media (min-width: 1024px) {
+
+  .vendor-page {
+    min-height: 100vh;
+
+    align-items: center;
+
+    padding: 40px;
+  }
+
+  .vendor-registration-card {
+    max-width: 430px;
+  }
+
+}

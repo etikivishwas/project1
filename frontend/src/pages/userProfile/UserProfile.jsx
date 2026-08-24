@@ -212,9 +212,7 @@ function UserProfile() {
   };
 
   const handleVendorRegistration = () => {
-    console.log(
-      "Join as a Vendor page not developed yet"
-    );
+    navigate("/vendorRegistration");
   };
 
   // =====================================================

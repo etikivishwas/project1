@@ -195,9 +195,9 @@ function UserScreen() {
       <header className="home-header">
         <div className="brand">
           <div className="brand-logo">
-            <span>M</span>
+            <span>MG</span>
           </div>
-          <h1>Milieu Global</h1>
+          <h1>LOCAL BIZZ</h1>
         </div>
         <button
           className="profile-button"
