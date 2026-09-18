@@ -1,330 +1,513 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiArrowLeft, FiChevronDown, FiArrowRight } from "react-icons/fi";
+import {
+  FiArrowLeft,
+  FiArrowRight,
+  FiBriefcase,
+  FiCheck,
+  FiChevronDown,
+  FiMapPin,
+  FiPhone,
+  FiRefreshCw,
+  FiUser,
+} from "react-icons/fi";
+import { FaStore } from "react-icons/fa";
+import logo from "../../assets/logo.jpeg";
 import "./VendorRegistration.css";
 
-const VendorRegistration = () => {
-    const navigate = useNavigate();
-    const [formData, setFormData] = useState({
-      businessName: "",
-      ownerName: "",
-      mobileNumber: "",
-      category: "",
-      location: "",
-    });
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
+const initialFormData = {
+  businessName: "",
+  ownerName: "",
+  mobileNumber: "",
+  category: "",
+  location: "",
+};
+
+const normalizeCategories = (result) => {
+  const categoryList = Array.isArray(result)
+    ? result
+    : Array.isArray(result?.data)
+      ? result.data
+      : Array.isArray(result?.categories)
+        ? result.categories
+        : [];
+
+  return categoryList
+    .map((category) => ({
+      id:
+        category.id ??
+        category.category_id ??
+        category.categoryId,
+      name:
+        category.name ??
+        category.category_name ??
+        category.categoryName,
+    }))
+    .filter(
+      (category) =>
+        category.id !== undefined &&
+        category.id !== null &&
+        Boolean(category.name)
+    );
+};
+
+export default function VendorRegistration() {
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState(initialFormData);
   const [errors, setErrors] = useState({});
+  const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [categoryError, setCategoryError] = useState("");
 
-  const categories = [
-    "Plumbing",
-    "Electrical",
-    "Cleaning",
-    "Beauty",
-    "Carpentry",
-    "Moving",
-    "HVAC",
-    "Other",
-  ];
+  const completedFieldCount = useMemo(
+    () =>
+      Object.values(formData).filter((value) => String(value).trim()).length,
+    [formData]
+  );
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const removeFieldError = (fieldName) => {
+    setErrors((currentErrors) => {
+      if (!currentErrors[fieldName]) {
+        return currentErrors;
+      }
 
-    setFormData((prev) => ({
-      ...prev,
+      const nextErrors = { ...currentErrors };
+      delete nextErrors[fieldName];
+      return nextErrors;
+    });
+  };
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+
+    setFormData((currentData) => ({
+      ...currentData,
       [name]: value,
     }));
 
-    // Remove error when user starts correcting the field
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
-    }
+    removeFieldError(name);
   };
 
-  const handleMobileChange = (e) => {
-    const value = e.target.value.replace(/\D/g, "");
+  const handleMobileChange = (event) => {
+    const numericValue = event.target.value.replace(/\D/g, "").slice(0, 10);
 
-    // Limit to 10 digits
-    if (value.length <= 10) {
-      setFormData((prev) => ({
-        ...prev,
-        mobileNumber: value,
-      }));
-    }
+    setFormData((currentData) => ({
+      ...currentData,
+      mobileNumber: numericValue,
+    }));
 
-    if (errors.mobileNumber) {
-      setErrors((prev) => ({
-        ...prev,
-        mobileNumber: "",
-      }));
-    }
+    removeFieldError("mobileNumber");
   };
+
+  const handleLocationChange = (event) => {
+    const numericValue = event.target.value.replace(/\D/g, "").slice(0, 6);
+
+    setFormData((currentData) => ({
+      ...currentData,
+      location: numericValue,
+    }));
+
+    removeFieldError("location");
+  };
+
+  const loadCategories = useCallback(async () => {
+    try {
+      setLoadingCategories(true);
+      setCategoryError("");
+
+      const response = await fetch(`${API_URL}/api/vendor-categories`, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+        },
+      });
+
+      const contentType = response.headers.get("content-type") || "";
+
+      if (!contentType.includes("application/json")) {
+        throw new Error("The category service returned an invalid response.");
+      }
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result?.message ||
+            `Could not load categories. Status: ${response.status}`
+        );
+      }
+
+      const normalizedCategories = normalizeCategories(result);
+
+      if (normalizedCategories.length === 0) {
+        throw new Error("No vendor categories are currently available.");
+      }
+
+      setCategories(normalizedCategories);
+    } catch (requestError) {
+      console.error("Load categories error:", requestError);
+      setCategories([]);
+      setCategoryError(
+        requestError.message ||
+          "Categories could not be loaded. Please try again."
+      );
+    } finally {
+      setLoadingCategories(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories]);
 
   const validateForm = () => {
-    const newErrors = {};
+    const nextErrors = {};
+    const businessName = formData.businessName.trim();
+    const ownerName = formData.ownerName.trim();
+    const mobileNumber = formData.mobileNumber.trim();
+    const location = formData.location.trim();
 
-    if (!formData.businessName.trim()) {
-      newErrors.businessName = "Business name is required";
+    if (!businessName) {
+      nextErrors.businessName = "Business name is required.";
+    } else if (businessName.length < 2) {
+      nextErrors.businessName =
+        "Business name must contain at least 2 characters.";
     }
 
-    if (!formData.ownerName.trim()) {
-      newErrors.ownerName = "Owner name is required";
+    if (!ownerName) {
+      nextErrors.ownerName = "Owner name is required.";
+    } else if (!/^[a-zA-Z\s.'-]{2,60}$/.test(ownerName)) {
+      nextErrors.ownerName = "Enter a valid owner name.";
     }
 
-    if (!formData.mobileNumber.trim()) {
-      newErrors.mobileNumber = "Mobile number is required";
-    } else if (formData.mobileNumber.length !== 10) {
-      newErrors.mobileNumber = "Enter a valid 10-digit mobile number";
+    if (!mobileNumber) {
+      nextErrors.mobileNumber = "Mobile number is required.";
+    } else if (!/^[6-9]\d{9}$/.test(mobileNumber)) {
+      nextErrors.mobileNumber =
+        "Enter a valid 10-digit Indian mobile number.";
     }
 
     if (!formData.category) {
-      newErrors.category = "Please select a category";
+      nextErrors.category = "Please select a category.";
     }
 
-    if (!formData.location.trim()) {
-      newErrors.location = "Pincode / location is required";
+    if (!location) {
+      nextErrors.location = "Pincode is required.";
+    } else if (!/^[1-9]\d{5}$/.test(location)) {
+      nextErrors.location = "Enter a valid 6-digit pincode.";
     }
 
-    setErrors(newErrors);
-
-    return Object.keys(newErrors).length === 0;
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
   };
 
-  const handleNext = (e) => {
-    e.preventDefault();
+  const handleNext = (event) => {
+    event.preventDefault();
+
+    if (loadingCategories) {
+      setErrors((currentErrors) => ({
+        ...currentErrors,
+        category: "Please wait while categories are loading.",
+      }));
+      return;
+    }
+
+    if (categoryError) {
+      setErrors((currentErrors) => ({
+        ...currentErrors,
+        category: "Categories are unavailable. Please retry.",
+      }));
+      return;
+    }
 
     if (!validateForm()) {
       return;
     }
 
-    console.log("Step 1 data:", formData);
-    navigate("/vendorRegistrationPage2", { state: { formData } });
+    const selectedCategory = categories.find(
+      (category) => String(category.id) === String(formData.category)
+    );
+
+    navigate("/vendorRegistrationPage2", {
+      state: {
+        step1Data: {
+          businessName: formData.businessName.trim(),
+          ownerName: formData.ownerName.trim(),
+          mobileNumber: formData.mobileNumber,
+          categoryId: formData.category,
+          categoryName: selectedCategory?.name || "",
+          location: formData.location,
+        },
+      },
+    });
   };
+
+  const categoryPlaceholder = loadingCategories
+    ? "Loading categories..."
+    : categoryError
+      ? "Categories unavailable"
+      : "Select a category";
 
   return (
     <div className="vendor-registration-page">
       <div className="vendor-registration-container">
-
-        {/* =========================================
-            HEADER
-        ========================================= */}
-
         <header className="vendor-registration-header">
           <button
             type="button"
             className="vendor-registration-back"
             onClick={() => navigate("/userProfile")}
-            aria-label="Go back"
+            aria-label="Return to profile"
           >
             <FiArrowLeft />
           </button>
 
-          <h1>New Vendor</h1>
+          <div className="vendor-registration-brand">
+            <img src={logo} alt="Milieu Global" />
+            <span>Vendor Registration</span>
+          </div>
 
-          <div className="vendor-header-spacer"></div>
+          <span className="vendor-header-spacer" />
         </header>
 
-
-        {/* =========================================
-            PROGRESS SECTION
-        ========================================= */}
-
-        <div className="vendor-progress-section">
-
-          <div className="vendor-progress-header">
-            <span>Step 1 of 3</span>
-            <span>Business Info</span>
-          </div>
-
-          <div className="vendor-progress-track">
-            <div className="vendor-progress-fill"></div>
-          </div>
-
-        </div>
-
-
-        {/* =========================================
-            FORM CARD
-        ========================================= */}
-
         <main className="vendor-registration-content">
+          <section className="vendor-registration-hero">
+            <div className="vendor-hero-decoration" />
+            <span className="vendor-hero-icon">
+              <FaStore />
+            </span>
+            <small>GROW WITH MILIEU GLOBAL</small>
+            <h1>Tell us about your business</h1>
+            <p>
+              Add the essential business details to begin the vendor
+              registration process.
+            </p>
 
-          <form
-            className="vendor-registration-form"
-            onSubmit={handleNext}
-          >
-
-            {/* Business Name */}
-            <div className="vendor-form-group">
-
-              <label htmlFor="businessName">
-                Business Name
-              </label>
-
-              <input
-                id="businessName"
-                name="businessName"
-                type="text"
-                placeholder="e.g home cleaning"
-                value={formData.businessName}
-                onChange={handleChange}
-              />
-
-              {errors.businessName && (
-                <span className="vendor-form-error">
-                  {errors.businessName}
-                </span>
-              )}
-
-            </div>
-
-
-            {/* Owner Name */}
-            <div className="vendor-form-group">
-
-              <label htmlFor="ownerName">
-                Owner Name
-              </label>
-
-              <input
-                id="ownerName"
-                name="ownerName"
-                type="text"
-                placeholder="e.g Vishwas"
-                value={formData.ownerName}
-                onChange={handleChange}
-              />
-
-              {errors.ownerName && (
-                <span className="vendor-form-error">
-                  {errors.ownerName}
-                </span>
-              )}
-
-            </div>
-
-
-            {/* Mobile Number */}
-            <div className="vendor-form-group">
-
-              <label htmlFor="mobileNumber">
-                Mobile Number
-              </label>
-
-              <div className="vendor-mobile-input">
-
-                <span className="vendor-country-code">
-                  +91
-                </span>
-
-                <input
-                  id="mobileNumber"
-                  name="mobileNumber"
-                  type="tel"
-                  inputMode="numeric"
-                  maxLength="10"
-                  placeholder="9876543210"
-                  value={formData.mobileNumber}
-                  onChange={handleMobileChange}
-                />
-
+            <div className="vendor-progress-card">
+              <div className="vendor-progress-title">
+                <span>Step 1 of 3</span>
+                <strong>Business information</strong>
               </div>
 
-              {errors.mobileNumber && (
-                <span className="vendor-form-error">
-                  {errors.mobileNumber}
-                </span>
-              )}
-
-            </div>
-
-
-            {/* Category */}
-            <div className="vendor-form-group">
-
-              <label htmlFor="category">
-                Category
-              </label>
-
-              <div className="vendor-select-wrapper">
-
-                <select
-                  id="category"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                >
-                  <option value="">
-                    Select a category
-                  </option>
-
-                  {categories.map((category) => (
-                    <option
-                      key={category}
-                      value={category}
-                    >
-                      {category}
-                    </option>
-                  ))}
-                </select>
-
-                <FiChevronDown className="vendor-select-icon" />
-
+              <div
+                className="vendor-progress-track"
+                role="progressbar"
+                aria-valuemin="1"
+                aria-valuemax="3"
+                aria-valuenow="1"
+                aria-label="Step 1 of 3"
+              >
+                <span className="vendor-progress-fill" />
               </div>
 
-              {errors.category && (
-                <span className="vendor-form-error">
-                  {errors.category}
+              <div className="vendor-progress-steps" aria-hidden="true">
+                <span className="active">
+                  <FiCheck />
                 </span>
-              )}
+                <span>2</span>
+                <span>3</span>
+              </div>
+            </div>
+          </section>
 
+          <section className="vendor-form-section">
+            <div className="vendor-form-heading">
+              <div>
+                <small>REQUIRED DETAILS</small>
+                <h2>Business information</h2>
+              </div>
+              <span>{completedFieldCount}/5 filled</span>
             </div>
 
-
-            {/* Pincode / Location */}
-            <div className="vendor-form-group">
-
-              <label htmlFor="location">
-                Pincode / Location
-              </label>
-
-              <input
-                id="location"
-                name="location"
-                type="text"
-                inputMode="numeric"
-                placeholder="e.g 500081"
-                value={formData.location}
-                onChange={handleChange}
-              />
-
-              {errors.location && (
-                <span className="vendor-form-error">
-                  {errors.location}
-                </span>
-              )}
-
-            </div>
-
-
-            {/* Next Button */}
-            <button
-              type="submit"
-              className="vendor-next-button"
+            <form
+              className="vendor-registration-form"
+              onSubmit={handleNext}
+              noValidate
             >
-              <span>Next</span>
-              <FiArrowRight />
-            </button>
+              <div className="vendor-form-group">
+                <label htmlFor="businessName">Business name</label>
+                <div
+                  className={`vendor-input-shell ${
+                    errors.businessName ? "invalid" : ""
+                  }`}
+                >
+                  <FiBriefcase />
+                  <input
+                    id="businessName"
+                    name="businessName"
+                    type="text"
+                    autoComplete="organization"
+                    placeholder="For example, Home Cleaning"
+                    value={formData.businessName}
+                    onChange={handleChange}
+                    maxLength={100}
+                    aria-invalid={Boolean(errors.businessName)}
+                  />
+                </div>
+                {errors.businessName && (
+                  <span className="vendor-form-error" role="alert">
+                    {errors.businessName}
+                  </span>
+                )}
+              </div>
 
-          </form>
+              <div className="vendor-form-group">
+                <label htmlFor="ownerName">Owner name</label>
+                <div
+                  className={`vendor-input-shell ${
+                    errors.ownerName ? "invalid" : ""
+                  }`}
+                >
+                  <FiUser />
+                  <input
+                    id="ownerName"
+                    name="ownerName"
+                    type="text"
+                    autoComplete="name"
+                    placeholder="For example, Vishwas"
+                    value={formData.ownerName}
+                    onChange={handleChange}
+                    maxLength={60}
+                    aria-invalid={Boolean(errors.ownerName)}
+                  />
+                </div>
+                {errors.ownerName && (
+                  <span className="vendor-form-error" role="alert">
+                    {errors.ownerName}
+                  </span>
+                )}
+              </div>
 
+              <div className="vendor-form-group">
+                <label htmlFor="mobileNumber">Mobile number</label>
+                <div
+                  className={`vendor-input-shell vendor-mobile-input ${
+                    errors.mobileNumber ? "invalid" : ""
+                  }`}
+                >
+                  <FiPhone />
+                  <span className="vendor-country-code">+91</span>
+                  <input
+                    id="mobileNumber"
+                    name="mobileNumber"
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel-national"
+                    maxLength={10}
+                    placeholder="9876543210"
+                    value={formData.mobileNumber}
+                    onChange={handleMobileChange}
+                    aria-invalid={Boolean(errors.mobileNumber)}
+                  />
+                </div>
+                {errors.mobileNumber && (
+                  <span className="vendor-form-error" role="alert">
+                    {errors.mobileNumber}
+                  </span>
+                )}
+              </div>
+
+              <div className="vendor-form-group">
+                <label htmlFor="category">Service category</label>
+                <div
+                  className={`vendor-input-shell vendor-select-wrapper ${
+                    errors.category ? "invalid" : ""
+                  }`}
+                >
+                  <FaStore />
+                  <select
+                    id="category"
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    disabled={loadingCategories || Boolean(categoryError)}
+                    aria-invalid={Boolean(errors.category)}
+                  >
+                    <option value="">{categoryPlaceholder}</option>
+                    {categories.map((category) => (
+                      <option
+                        key={String(category.id)}
+                        value={String(category.id)}
+                      >
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                  <FiChevronDown className="vendor-select-icon" />
+                </div>
+
+                {categoryError && (
+                  <div className="vendor-category-api-error" role="alert">
+                    <span>{categoryError}</span>
+                    <button
+                      type="button"
+                      onClick={loadCategories}
+                      disabled={loadingCategories}
+                    >
+                      <FiRefreshCw /> Retry
+                    </button>
+                  </div>
+                )}
+
+                {errors.category && (
+                  <span className="vendor-form-error" role="alert">
+                    {errors.category}
+                  </span>
+                )}
+              </div>
+
+              <div className="vendor-form-group">
+                <label htmlFor="location">Business pincode</label>
+                <div
+                  className={`vendor-input-shell ${
+                    errors.location ? "invalid" : ""
+                  }`}
+                >
+                  <FiMapPin />
+                  <input
+                    id="location"
+                    name="location"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="postal-code"
+                    maxLength={6}
+                    placeholder="For example, 500081"
+                    value={formData.location}
+                    onChange={handleLocationChange}
+                    aria-invalid={Boolean(errors.location)}
+                  />
+                </div>
+                {errors.location && (
+                  <span className="vendor-form-error" role="alert">
+                    {errors.location}
+                  </span>
+                )}
+              </div>
+
+              <div className="vendor-form-note">
+                <FiCheck />
+                <span>
+                  These details will be reviewed before the vendor listing is
+                  published.
+                </span>
+              </div>
+
+              <button
+                type="submit"
+                className="vendor-next-button"
+                disabled={loadingCategories || Boolean(categoryError)}
+              >
+                <span>
+                  {loadingCategories ? "Loading categories..." : "Continue"}
+                </span>
+                <FiArrowRight />
+              </button>
+            </form>
+          </section>
         </main>
-
       </div>
     </div>
   );
-};
-
-export default VendorRegistration;
+}

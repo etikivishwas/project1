@@ -1,662 +1,514 @@
-/* =========================================================
-   PAGE
-   ========================================================= */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow-x: hidden;
+  background: #edf3fb;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
 
 .vendor-registration-page {
-  min-height: 100vh;
-
-  background: #f7f8ff;
-
-  color: #071a2e;
-
-  font-family:
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Arial,
-    sans-serif;
-
-  box-sizing: border-box;
+  width: 100%;
+  min-height: 100dvh;
+  background: #edf3fb;
+  color: #102535;
+  font-family: "Inter", sans-serif;
 }
-
-
-.vendor-registration-page *,
-.vendor-registration-page *::before,
-.vendor-registration-page *::after {
-  box-sizing: border-box;
-}
-
-
-/* =========================================================
-   MAIN CONTAINER
-
-   Mobile:
-   Full screen
-
-   Desktop:
-   Keep the application in a mobile-style centered layout
-   ========================================================= */
 
 .vendor-registration-container {
+  --vendor-navy: #071f30;
+  --vendor-green: #0c9b72;
+  --vendor-line: #dfe7eb;
+
   width: 100%;
-  min-height: 100vh;
-
-  background: #f7f8ff;
-
-  display: flex;
-  flex-direction: column;
+  max-width: 430px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  overflow-x: clip;
+  background: #f4f7fa;
+  border-left: 1px solid #dbe3e8;
+  border-right: 1px solid #dbe3e8;
 }
-
-
-/* =========================================================
-   HEADER
-   ========================================================= */
 
 .vendor-registration-header {
-  height: 50px;
-
-  flex-shrink: 0;
-
-  background: #ffffff;
-
-  border-bottom: 1px solid #dce1e8;
-
-  display: flex;
+  position: sticky;
+  z-index: 50;
+  top: 0;
+  height: 70px;
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 42px;
   align-items: center;
-
-  padding: 0 14px;
+  gap: 8px;
+  border-bottom: 1px solid rgba(216, 226, 232, 0.9);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
 }
-
 
 .vendor-registration-back {
-  width: 30px;
-  height: 30px;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #dce5e9;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--vendor-navy);
+  font-size: 19px;
+  cursor: pointer;
+  box-shadow: 0 5px 16px rgba(16, 42, 58, 0.07);
+}
 
-  border: none;
-  background: transparent;
-
-  padding: 0;
-
+.vendor-registration-brand {
+  min-width: 0;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-
-  color: #26384b;
-
-  font-size: 17px;
-
-  cursor: pointer;
+  justify-content: center;
+  gap: 8px;
 }
 
+.vendor-registration-brand img {
+  width: 32px;
+  height: 32px;
+  padding: 2px;
+  object-fit: contain;
+  border: 1px solid #dce7e4;
+  border-radius: 9px;
+  background: #fff;
+}
 
-.vendor-registration-header h1 {
-  flex: 1;
-
-  margin: 0;
-
-  text-align: center;
-
-  font-size: 13px;
+.vendor-registration-brand span {
+  overflow: hidden;
+  font-size: 12px;
   font-weight: 700;
-
-  color: #071a2e;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-
 
 .vendor-header-spacer {
-  width: 30px;
-  height: 30px;
+  width: 42px;
+  height: 42px;
 }
-
-
-/* =========================================================
-   PROGRESS SECTION
-   ========================================================= */
-
-.vendor-progress-section {
-  padding: 22px 18px 0;
-}
-
-
-.vendor-progress-header {
-  display: flex;
-
-  align-items: center;
-  justify-content: space-between;
-
-  margin-bottom: 6px;
-}
-
-
-.vendor-progress-header span:first-child {
-  font-size: 10px;
-
-  font-weight: 700;
-
-  color: #071a2e;
-}
-
-
-.vendor-progress-header span:last-child {
-  font-size: 8px;
-
-  font-weight: 500;
-
-  color: #071a2e;
-}
-
-
-/* =========================================================
-   PROGRESS BAR
-   ========================================================= */
-
-.vendor-progress-track {
-  width: 100%;
-
-  height: 5px;
-
-  background: #e0e8ff;
-
-  border-radius: 10px;
-
-  overflow: hidden;
-}
-
-
-.vendor-progress-fill {
-  width: 33.33%;
-
-  height: 100%;
-
-  background: #071a2e;
-
-  border-radius: 10px;
-}
-
-
-/* =========================================================
-   CONTENT
-   ========================================================= */
 
 .vendor-registration-content {
   width: 100%;
-
-  padding: 21px 12px 30px;
-
-  flex: 1;
+  padding: 17px 15px 34px;
 }
 
+.vendor-registration-hero {
+  position: relative;
+  padding: 22px 17px 18px;
+  overflow: hidden;
+  border-radius: 20px;
+  color: #fff;
+  background:
+    radial-gradient(circle at 92% 5%, rgba(91, 239, 169, 0.25), transparent 29%),
+    radial-gradient(circle at 5% 100%, rgba(67, 126, 159, 0.25), transparent 34%),
+    linear-gradient(145deg, #061b2b, #0b3043);
+  box-shadow: 0 14px 30px rgba(7, 31, 48, 0.17);
+}
 
-/* =========================================================
-   FORM CARD
-   ========================================================= */
+.vendor-hero-decoration {
+  position: absolute;
+  right: -42px;
+  top: 14px;
+  width: 135px;
+  height: 135px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+}
+
+.vendor-hero-icon {
+  position: relative;
+  z-index: 1;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(99, 239, 173, 0.25);
+  border-radius: 13px;
+  background: rgba(99, 239, 173, 0.12);
+  color: #71efb2;
+  font-size: 19px;
+}
+
+.vendor-registration-hero > small {
+  position: relative;
+  z-index: 1;
+  display: block;
+  margin-top: 13px;
+  color: #6ff0b1;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.vendor-registration-hero h1 {
+  position: relative;
+  z-index: 1;
+  margin: 6px 0 7px;
+  font-size: 23px;
+  line-height: 1.15;
+  letter-spacing: -0.7px;
+}
+
+.vendor-registration-hero > p {
+  position: relative;
+  z-index: 1;
+  max-width: 315px;
+  margin: 0;
+  color: #c2d3db;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.vendor-progress-card {
+  position: relative;
+  z-index: 2;
+  margin-top: 18px;
+  padding: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.vendor-progress-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.vendor-progress-title span {
+  color: #70efb2;
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.vendor-progress-title strong {
+  color: #e5eff3;
+  font-size: 9px;
+}
+
+.vendor-progress-track {
+  height: 6px;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.vendor-progress-fill {
+  display: block;
+  width: 33.333%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #4adf9b, #79f2bb);
+}
+
+.vendor-progress-steps {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.vendor-progress-steps span {
+  height: 23px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 8px;
+  color: #afc2cb;
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.vendor-progress-steps span.active {
+  border-color: rgba(99, 239, 173, 0.35);
+  background: rgba(99, 239, 173, 0.14);
+  color: #71efb2;
+}
+
+.vendor-form-section {
+  margin-top: 24px;
+}
+
+.vendor-form-heading {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.vendor-form-heading small {
+  color: #0a8b68;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 1.1px;
+}
+
+.vendor-form-heading h2 {
+  margin: 4px 0 0;
+  font-size: 17px;
+  letter-spacing: -0.3px;
+}
+
+.vendor-form-heading > span {
+  padding: 5px 8px;
+  border-radius: 10px;
+  background: #e7f6f1;
+  color: #087456;
+  font-size: 8px;
+  font-weight: 700;
+  white-space: nowrap;
+}
 
 .vendor-registration-form {
-  width: 100%;
-
-  background: #fbfbff;
-
-  border: 1px solid #e5e8ef;
-
-  border-radius: 9px;
-
-  padding: 18px 16px 17px;
-
-  box-shadow:
-    0 2px 7px rgba(20, 35, 55, 0.025);
+  padding: 16px;
+  border: 1px solid var(--vendor-line);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(23, 48, 65, 0.06);
 }
-
-
-/* =========================================================
-   FORM GROUP
-   ========================================================= */
 
 .vendor-form-group {
-  width: 100%;
-
-  margin-bottom: 13px;
+  margin-bottom: 16px;
 }
-
 
 .vendor-form-group label {
   display: block;
-
-  margin: 0 0 6px;
-
-  font-size: 9px;
-
+  margin-bottom: 7px;
+  color: #1a3342;
+  font-size: 10px;
   font-weight: 700;
-
-  color: #071a2e;
 }
 
-
-/* =========================================================
-   INPUT
-   ========================================================= */
-
-.vendor-form-group input {
+.vendor-input-shell {
   width: 100%;
-
-  height: 35px;
-
-  border: 1px solid #cbd1dc;
-
-  border-radius: 6px;
-
-  background: #ffffff;
-
-  padding: 0 10px;
-
-  outline: none;
-
-  font-family: inherit;
-
-  font-size: 10px;
-
-  color: #071a2e;
-
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-
-.vendor-form-group input::placeholder {
-  color: #8a94a3;
-}
-
-
-.vendor-form-group input:focus {
-  border-color: #75859a;
-
-  box-shadow:
-    0 0 0 2px rgba(7, 26, 46, 0.05);
-}
-
-
-/* =========================================================
-   MOBILE NUMBER
-   ========================================================= */
-
-.vendor-mobile-input {
-  width: 100%;
-
-  height: 35px;
-
+  height: 50px;
+  padding: 0 13px;
   display: flex;
   align-items: center;
-
-  background: #ffffff;
-
-  border: 1px solid #cbd1dc;
-
-  border-radius: 6px;
-
-  overflow: hidden;
-
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
+  gap: 10px;
+  border: 1px solid #d1dce2;
+  border-radius: 12px;
+  background: #fbfcfd;
+  color: #70818a;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
-
-.vendor-mobile-input:focus-within {
-  border-color: #75859a;
-
-  box-shadow:
-    0 0 0 2px rgba(7, 26, 46, 0.05);
+.vendor-input-shell:focus-within {
+  border-color: #0b8a68;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(11, 138, 104, 0.1);
 }
 
+.vendor-input-shell.invalid {
+  border-color: #c94758;
+  background: #fffafb;
+}
 
-.vendor-country-code {
+.vendor-input-shell > svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+
+.vendor-input-shell input,
+.vendor-input-shell select {
+  min-width: 0;
   height: 100%;
-
-  display: flex;
-  align-items: center;
-
-  padding: 0 8px;
-
-  color: #5f6b79;
-
-  font-size: 10px;
-
-  flex-shrink: 0;
-}
-
-
-.vendor-mobile-input input {
-  height: 100%;
-
-  border: none;
-
-  border-left: 1px solid #e4e7ec;
-
-  border-radius: 0;
-
-  box-shadow: none;
-
-  padding-left: 8px;
-}
-
-
-.vendor-mobile-input input:focus {
-  border-color: #e4e7ec;
-
-  box-shadow: none;
-}
-
-
-/* =========================================================
-   SELECT
-   ========================================================= */
-
-.vendor-select-wrapper {
-  position: relative;
-
-  width: 100%;
-}
-
-
-.vendor-select-wrapper select {
-  width: 100%;
-
-  height: 35px;
-
-  appearance: none;
-  -webkit-appearance: none;
-
-  border: 1px solid #cbd1dc;
-
-  border-radius: 6px;
-
-  background: #ffffff;
-
-  padding: 0 30px 0 10px;
-
-  outline: none;
-
-  font-family: inherit;
-
-  font-size: 10px;
-
-  color: #071a2e;
-
-  cursor: pointer;
-}
-
-
-.vendor-select-wrapper select:invalid,
-.vendor-select-wrapper select option[value=""] {
-  color: #7e8896;
-}
-
-
-.vendor-select-wrapper select:focus {
-  border-color: #75859a;
-
-  box-shadow:
-    0 0 0 2px rgba(7, 26, 46, 0.05);
-}
-
-
-.vendor-select-icon {
-  position: absolute;
-
-  right: 9px;
-  top: 50%;
-
-  transform: translateY(-50%);
-
-  pointer-events: none;
-
-  font-size: 15px;
-
-  color: #697587;
-}
-
-
-/* =========================================================
-   ERROR
-   ========================================================= */
-
-.vendor-form-error {
-  display: block;
-
-  margin-top: 4px;
-
-  font-size: 8px;
-
-  color: #c53939;
-}
-
-
-/* =========================================================
-   NEXT BUTTON
-   ========================================================= */
-
-.vendor-next-button {
-  width: 100%;
-
-  height: 39px;
-
-  margin-top: 9px;
-
-  border: none;
-
-  border-radius: 6px;
-
-  background: #061a2d;
-
-  color: #ffffff;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
-  gap: 7px;
-
-  font-family: inherit;
-
-  font-size: 10px;
-
-  font-weight: 700;
-
-  cursor: pointer;
-
-  transition:
-    background 0.15s ease,
-    transform 0.1s ease;
-}
-
-
-.vendor-next-button svg {
+  flex: 1;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #102b39;
   font-size: 16px;
 }
 
-
-.vendor-next-button:hover {
-  background: #0b263d;
+.vendor-input-shell input::placeholder {
+  color: #8a989f;
 }
 
+.vendor-country-code {
+  height: 25px;
+  padding-right: 10px;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid #dce4e8;
+  color: #405765;
+  font-size: 11px;
+  font-weight: 700;
+}
 
-.vendor-next-button:active {
+.vendor-select-wrapper {
+  position: relative;
+}
+
+.vendor-select-wrapper select {
+  padding-right: 25px;
+  appearance: none;
+  cursor: pointer;
+}
+
+.vendor-select-wrapper select:disabled {
+  color: #7c8c95;
+  cursor: not-allowed;
+}
+
+.vendor-select-icon {
+  position: absolute;
+  right: 13px;
+  pointer-events: none;
+}
+
+.vendor-form-error {
+  display: block;
+  margin-top: 6px;
+  color: #b23547;
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.vendor-category-api-error {
+  margin-top: 8px;
+  padding: 9px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid #f0c7cd;
+  border-radius: 10px;
+  background: #fff2f4;
+  color: #a63345;
+  font-size: 9px;
+}
+
+.vendor-category-api-error span {
+  min-width: 0;
+  line-height: 1.4;
+}
+
+.vendor-category-api-error button {
+  height: 30px;
+  padding: 0 9px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid #d58a95;
+  border-radius: 8px;
+  background: #fff;
+  color: #a63345;
+  font-size: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.vendor-form-note {
+  margin-top: 3px;
+  padding: 10px 11px;
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  border: 1px solid #d3eee3;
+  border-radius: 10px;
+  background: #f0faf6;
+  color: #42695b;
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.vendor-form-note svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  color: #087754;
+}
+
+.vendor-next-button {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 14px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #071f30, #10394c);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(7, 31, 48, 0.18);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.vendor-next-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 13px 25px rgba(7, 31, 48, 0.23);
+}
+
+.vendor-next-button:active:not(:disabled) {
   transform: scale(0.99);
 }
 
-
-/* =========================================================
-   TABLET
-   ========================================================= */
-
-@media (min-width: 600px) {
-
-  .vendor-registration-container {
-    max-width: 600px;
-
-    margin: 0 auto;
-
-    min-height: 100vh;
-  }
-
-
-  .vendor-registration-header {
-    height: 56px;
-
-    padding: 0 18px;
-  }
-
-
-  .vendor-registration-header h1 {
-    font-size: 15px;
-  }
-
-
-  .vendor-progress-section {
-    padding: 25px 22px 0;
-  }
-
-
-  .vendor-registration-content {
-    padding: 24px 18px 40px;
-  }
-
-
-  .vendor-registration-form {
-    padding: 22px 20px 20px;
-  }
-
-
-  .vendor-form-group {
-    margin-bottom: 16px;
-  }
-
-
-  .vendor-form-group label {
-    font-size: 10px;
-  }
-
-
-  .vendor-form-group input,
-  .vendor-mobile-input,
-  .vendor-select-wrapper select {
-    height: 40px;
-
-    font-size: 11px;
-  }
-
-
-  .vendor-next-button {
-    height: 43px;
-
-    font-size: 11px;
-  }
+.vendor-next-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
-
-/* =========================================================
-   DESKTOP
-   ========================================================= */
-
-@media (min-width: 900px) {
-
-  .vendor-registration-page {
-    background: #eef0f5;
-
-    display: flex;
-    justify-content: center;
-  }
-
-
+@media (min-width: 431px) {
   .vendor-registration-container {
-    width: 100%;
-
-    max-width: 500px;
-
-    min-height: 100vh;
-
-    background: #f7f8ff;
-
-    box-shadow:
-      0 0 20px rgba(20, 35, 55, 0.05);
-  }
-
-
-  .vendor-registration-header {
-    padding: 0 20px;
-  }
-
-
-  .vendor-progress-section {
-    padding-left: 24px;
-    padding-right: 24px;
-  }
-
-
-  .vendor-registration-content {
-    padding-left: 18px;
-    padding-right: 18px;
+    box-shadow: 0 0 40px rgba(20, 45, 60, 0.09);
   }
 }
-
-
-/* =========================================================
-   SMALL MOBILE
-   ========================================================= */
 
 @media (max-width: 350px) {
-
-  .vendor-registration-header {
-    height: 48px;
-
-    padding: 0 12px;
-  }
-
-
-  .vendor-registration-header h1 {
-    font-size: 12px;
-  }
-
-
-  .vendor-progress-section {
-    padding: 20px 15px 0;
-  }
-
-
+  .vendor-registration-header,
   .vendor-registration-content {
-    padding: 18px 8px 25px;
+    padding-left: 12px;
+    padding-right: 12px;
   }
-
 
   .vendor-registration-form {
-    padding: 16px 14px 15px;
+    padding: 14px 12px;
   }
 
-
-  .vendor-form-group {
-    margin-bottom: 12px;
+  .vendor-category-api-error {
+    align-items: flex-start;
+    flex-direction: column;
   }
+}
 
-
-  .vendor-form-group label {
-    font-size: 8px;
-  }
-
-
-  .vendor-form-group input,
-  .vendor-mobile-input,
-  .vendor-select-wrapper select {
-    height: 34px;
-
-    font-size: 9px;
-  }
-
-
-  .vendor-next-button {
-    height: 38px;
-    font-size: 9px;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

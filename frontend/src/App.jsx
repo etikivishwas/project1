@@ -12,7 +12,7 @@ import VerifyOtp from "./components/VerifyOtp";
 import ForgotPassword from "./components/ForgotPassword";
 import ResetPassword from "./components/ResetPassword";
 
-import UserScreen from "./pages/UserScreen/userScreen.jsx";
+import UserScreen from "./pages/UserScreen/UserScreen.jsx";
 import UserHistory from "./pages/userHistory/userHistory.jsx";
 import UserProfile from "./pages/userProfile/UserProfile.jsx";
 import HelpSupport from "./pages/HelpSupport/HelpSupport.jsx"
@@ -20,7 +20,8 @@ import VendorSearch from "./pages/VendorSearch/VendorSearch.jsx";
 import VendorRegistration from "./pages/VendorRegistration/VendorRegistration.jsx";
 import VendorRegistrationPage2 from "./pages/VendorRegistrationPage2/VendorRegistration.jsx";
 import VendorRegistrationPage3 from "./pages/VendorRegistrationPage3/VendorRegistration.jsx";
-
+import VendorRegistrationSuccess from "./pages/VendorRegistrationSuccess/VendorRegistrationSuccess.jsx";
+import VendorDetails from "./pages/VendorDetail/VendorDetails.jsx"
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import "./theme.css";
@@ -143,6 +144,15 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/vendorRegistrationSuccess"
+          element={
+            <ProtectedRoute>
+              <VendorRegistrationSuccess />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/vendor/:vendorId" element={<VendorDetails />} />
         {/* =========================================
             UNKNOWN ROUTES
             ========================================= */}

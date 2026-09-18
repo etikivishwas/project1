@@ -1,338 +1,334 @@
 import React, { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   FiArrowLeft,
-  FiSearch,
-  FiPhone,
-  FiMessageCircle,
-  FiMail,
   FiChevronDown,
-  FiHome,
   FiClock,
+  FiHelpCircle,
+  FiHome,
+  FiMail,
+  FiMessageCircle,
+  FiPhone,
+  FiSearch,
+  FiX,
 } from "react-icons/fi";
-
+import logo from "../../assets/logo.jpeg";
 import "./HelpSupport.css";
 
-function HelpSupport() {
+const faqs = [
+  {
+    id: 1,
+    category: "Providers",
+    question: "How do I check whether a service provider is verified?",
+    answer:
+      "Open the provider profile and look for the Verified badge. Before contacting a provider, review the available service details, ratings, location, pricing information, and completed profile information.",
+  },
+  {
+    id: 2,
+    category: "Support",
+    question: "What should I do if I have an issue with a service request?",
+    answer:
+      "Open Service History, select the relevant interaction, and keep the provider and service details available. Contact support by phone, chat, or email and describe the issue. The support team can then review the available information.",
+  },
+  {
+    id: 3,
+    category: "Vendor",
+    question: "How can a provider upgrade to a Featured Listing?",
+    answer:
+      "A registered vendor can open the appropriate vendor account section and select the Featured Listing option when available. Follow the displayed plan, payment, and confirmation steps to complete the upgrade.",
+  },
+  {
+    id: 4,
+    category: "Account",
+    question: "How can I update my account details?",
+    answer:
+      "Open My Profile, choose Settings & Privacy, and update the available account fields. Some information may require verification before the changes become active.",
+  },
+  {
+    id: 5,
+    category: "History",
+    question: "Where can I find my previous service interactions?",
+    answer:
+      "Use the History tab in the bottom navigation. The page lists available service interactions and lets you reopen the related provider details.",
+  },
+];
+
+const contactActions = [
+  {
+    id: "call",
+    title: "Direct Call",
+    subtitle: "Mon to Fri, 9 AM to 6 PM",
+    icon: FiPhone,
+    className: "call",
+  },
+  {
+    id: "chat",
+    title: "Live Chat",
+    subtitle: "Typical reply within 5 minutes",
+    icon: FiMessageCircle,
+    className: "chat",
+  },
+  {
+    id: "email",
+    title: "Email Support",
+    subtitle: "support@milieuglobal.com",
+    icon: FiMail,
+    className: "email",
+  },
+];
+
+const footerItems = [
+  { label: "Home", path: "/userScreen", icon: FiHome },
+  { label: "Search", path: "/vendorSearch", icon: FiSearch },
+  { label: "History", path: "/userHistory", icon: FiClock },
+];
+
+export default function HelpSupport() {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [openFaq, setOpenFaq] = useState(null);
-
-  // =====================================================
-  // FAQ DATA
-  // =====================================================
-
-  const faqs = [
-    {
-      id: 1,
-      question:
-        "How do I verify my service provider profile?",
-
-      answer:
-        "You can verify a service provider by checking the verified badge displayed on their profile. You can also review their ratings, reviews, service details and other available information before contacting them.",
-    },
-
-    {
-      id: 2,
-      question:
-        "What is the process for handling a disputed lead?",
-
-      answer:
-        "If you have an issue with a service provider or a lead, open your Service History and select the relevant service request. You can then contact our support team with the details of the issue. Our support team will review the request and help resolve the dispute.",
-    },
-
-    {
-      id: 3,
-      question:
-        "How can I upgrade to a Featured Listing?",
-
-      answer:
-        "To upgrade a service provider to a Featured Listing, go to the relevant provider or vendor section and select the Featured Listing option. Follow the available payment and confirmation steps to complete the upgrade.",
-    },
-  ];
-
-  // =====================================================
-  // FILTER FAQ
-  // =====================================================
+  const [chatNotice, setChatNotice] = useState("");
 
   const filteredFaqs = useMemo(() => {
-    const query = searchQuery
-      .trim()
-      .toLowerCase();
+    const query = searchQuery.trim().toLowerCase();
 
     if (!query) {
       return faqs;
     }
 
-    return faqs.filter((faq) => {
-      return (
-        faq.question
-          .toLowerCase()
-          .includes(query) ||
-        faq.answer
-          .toLowerCase()
-          .includes(query)
-      );
-    });
+    return faqs.filter((faq) =>
+      [faq.category, faq.question, faq.answer]
+        .join(" ")
+        .toLowerCase()
+        .includes(query)
+    );
   }, [searchQuery]);
 
-  // =====================================================
-  // FAQ TOGGLE
-  // =====================================================
+  const handleContact = (action) => {
+    if (action === "call") {
+      window.location.href = "tel:+919381423238";
+      return;
+    }
 
-  const handleFaqClick = (id) => {
-    setOpenFaq(
-      openFaq === id ? null : id
-    );
+    if (action === "email") {
+      window.location.href =
+        "mailto:support@milieuglobal.com?subject=Milieu%20Global%20Support";
+      return;
+    }
+
+    setChatNotice("Live chat will be available here soon.");
+    window.setTimeout(() => setChatNotice(""), 3500);
   };
 
-  // =====================================================
-  // NAVIGATION
-  // =====================================================
+  const isFooterActive = (path) => {
+    if (path === "/vendorSearch") {
+      return location.pathname.startsWith("/vendorSearch");
+    }
 
-  const handleBack = () => {
-    navigate("/userProfile");
-  };
+    if (path === "/userHistory") {
+      return location.pathname.startsWith("/userHistory");
+    }
 
-  const handleHome = () => {
-    navigate("/userScreen");
-  };
-
-  const handleSearch = () => {
-    navigate("/vendorSearch");
-  };
-
-  const handleHistory = () => {
-    navigate("/userHistory");
-  };
-
-  // =====================================================
-  // CONTACT ACTIONS
-  // =====================================================
-
-  const handleDirectCall = () => {
-    window.location.href =
-      "tel:+919381423238";
-  };
-
-  const handleLiveChat = () => {
-    /*
-      Live chat will be implemented here.
-
-      For now we are keeping this as a placeholder.
-    */
-
-    console.log(
-      "Live chat will be opened here."
-    );
-  };
-
-  const handleEmailSupport = () => {
-    window.location.href =
-      "mailto:support@milieuglobal.com";
+    return location.pathname === path;
   };
 
   return (
-    <div className="help-page">
-      {/* =================================================
-          HEADER
-          ================================================= */}
-      <header className="help-header">
-        <button
-          className="help-back-button"
-          onClick={handleBack}
-          aria-label="Go back"
-        >
-          <FiArrowLeft />
-        </button>
-        <h1>
-          Help &amp; Support
-        </h1>
-      </header>
-      <main className="help-content">
-        <div className="help-search-wrapper">
-          <FiSearch className="help-search-icon" />
-          <input
-            type="text"
-            className="help-search-input"
-            placeholder="Search Help..."
-            value={searchQuery}
-            onChange={(e) =>
-              setSearchQuery(
-                e.target.value
-              )
-            }
-          />
-        </div>
+    <>
+      <div className="help-page">
+        <header className="help-header">
+          <button
+            type="button"
+            className="help-back-button"
+            onClick={() => navigate("/userProfile")}
+            aria-label="Return to profile"
+          >
+            <FiArrowLeft />
+          </button>
 
-        <section className="help-section">
-          <h2 className="help-section-title">
-            Contact Us
-          </h2>
-          <div className="contact-grid">
-            {/* DIRECT CALL */}
-            <button
-              className="contact-card"
-              onClick={handleDirectCall}
-              type="button"
-            >
-              <div className="contact-icon call-icon">
-                <FiPhone />
-              </div>
-              <h3>
-                Direct Call
-              </h3>
-              <p>
-                Mon-Fri, 9am-6pm
-              </p>
-            </button>
-            
-            <button
-              className="contact-card"
-              onClick={handleLiveChat}
-              type="button"
-            >
-              <div className="contact-icon chat-icon">
-                <FiMessageCircle />
-              </div>
-              <h3>
-                Live Chat
-              </h3>
-              <p>
-                Typical reply: 5 mins
-              </p>
-            </button>
-
-            {/* EMAIL SUPPORT */}
-
-            <button
-              className="contact-card"
-              onClick={handleEmailSupport}
-              type="button"
-            >
-              <div className="contact-icon email-icon">
-                <FiMail />
-              </div>
-              <h3>
-                Email Support
-              </h3>
-              <p>
-                support@milieuglobal.com
-              </p>
-            </button>
+          <div className="help-header-brand">
+            <img src={logo} alt="Milieu Global" />
+            <span>Help & Support</span>
           </div>
-        </section>
 
-        {/* =================================================
-            FAQ
-            ================================================= */}
-        <section className="help-section faq-section">
-          <h2 className="help-section-title">
-            Frequently Asked Questions
-          </h2>
-          <div className="faq-list">
-            {filteredFaqs.length > 0 ? (
-              filteredFaqs.map((faq) => {
-                const isOpen =
-                  openFaq === faq.id;
-                return (
-                  <div
-                    className={`faq-item ${
-                      isOpen
-                        ? "faq-item-open"
-                        : ""
-                    }`}
-                    key={faq.id}
+          <span className="help-header-spacer" />
+        </header>
+
+        <main className="help-content">
+          <section className="help-hero">
+            <div className="help-hero-decoration" />
+            <span className="help-hero-icon">
+              <FiHelpCircle />
+            </span>
+            <small>HOW CAN WE HELP?</small>
+            <h1>Support when you need it</h1>
+            <p>
+              Search common questions or contact the support team using the
+              available options below.
+            </p>
+
+            <div className="help-search-wrapper">
+              <FiSearch className="help-search-icon" />
+              <input
+                type="search"
+                className="help-search-input"
+                placeholder="Search help articles..."
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                autoComplete="off"
+              />
+
+              {searchQuery && (
+                <button
+                  type="button"
+                  className="help-search-clear"
+                  onClick={() => setSearchQuery("")}
+                  aria-label="Clear help search"
+                >
+                  <FiX />
+                </button>
+              )}
+            </div>
+          </section>
+
+          {chatNotice && (
+            <div className="help-notice" role="status">
+              <FiMessageCircle />
+              <span>{chatNotice}</span>
+            </div>
+          )}
+
+          <section className="help-section">
+            <div className="help-section-heading">
+              <div>
+                <small>CONTACT OPTIONS</small>
+                <h2>Contact the support team</h2>
+              </div>
+            </div>
+
+            <div className="contact-grid">
+              {contactActions.map(
+                ({ id, title, subtitle, icon: Icon, className }, index) => (
+                  <button
+                    type="button"
+                    className="contact-card"
+                    key={id}
+                    onClick={() => handleContact(id)}
+                    style={{ "--contact-index": index }}
                   >
-                    <button
-                      className="faq-question"
-                      onClick={() =>
-                        handleFaqClick(
-                          faq.id
-                        )
-                      }
-                      type="button"
-                      aria-expanded={isOpen}
-                    >
+                    <span className={`contact-icon ${className}`}>
+                      <Icon />
+                    </span>
+                    <span className="contact-copy">
+                      <strong>{title}</strong>
+                      <small>{subtitle}</small>
+                    </span>
+                    <span className="contact-arrow">›</span>
+                  </button>
+                )
+              )}
+            </div>
+          </section>
 
-                      <span>
-                        {faq.question}
-                      </span>
-                      <FiChevronDown
-                        className={`faq-chevron ${
-                          isOpen
-                            ? "faq-chevron-open"
-                            : ""
-                        }`}
-                      />
-                    </button>
-                    {isOpen && (
-                      <div className="faq-answer">
-                        <p>
-                          {faq.answer}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                );
-              })
-            ) : (
-              <div className="faq-no-results">
-                <p>
-                  No help articles found.
-                </p>
-                <span>
-                  Try searching with a
-                  different keyword.
-                </span>
+          <section className="help-section faq-section">
+            <div className="help-section-heading faq-heading">
+              <div>
+                <small>POPULAR QUESTIONS</small>
+                <h2>Frequently asked questions</h2>
               </div>
-            )}
-          </div>
-        </section>
-      </main>
+              <span>{filteredFaqs.length} articles</span>
+            </div>
 
-      {/* =================================================
-          BOTTOM NAVIGATION
-          ================================================= */}
+            <div className="faq-list">
+              {filteredFaqs.length > 0 ? (
+                filteredFaqs.map((faq, index) => {
+                  const isOpen = openFaq === faq.id;
 
-      <nav className="help-bottom-navigation">
-        {/* HOME */}
-        <button
-          className="help-nav-item active"
-          onClick={handleHome}
-          type="button"
-        >
-          <FiHome />
-          <span>
-            Home
-          </span>
-        </button>
-        {/* SEARCH */}
-        <button
-          className="help-nav-item"
-          onClick={handleSearch}
-          type="button"
-        >
-          <FiSearch />
-          <span>
-            Search
-          </span>
-        </button>
-        {/* HISTORY */}
-        <button
-          className="help-nav-item"
-          onClick={handleHistory}
-          type="button"
-        >
-          <FiClock />
-          <span>
-            History
-          </span>
-        </button>
-      </nav>
-    </div>
+                  return (
+                    <article
+                      className={`faq-item ${isOpen ? "open" : ""}`}
+                      key={faq.id}
+                      style={{ "--faq-index": index }}
+                    >
+                      <button
+                        type="button"
+                        className="faq-question"
+                        onClick={() => setOpenFaq(isOpen ? null : faq.id)}
+                        aria-expanded={isOpen}
+                      >
+                        <span className="faq-number">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                        <span className="faq-question-copy">
+                          <small>{faq.category}</small>
+                          <strong>{faq.question}</strong>
+                        </span>
+                        <FiChevronDown className="faq-chevron" />
+                      </button>
+
+                      <div className="faq-answer-wrap">
+                        <div className="faq-answer">
+                          <p>{faq.answer}</p>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })
+              ) : (
+                <div className="faq-no-results">
+                  <span className="faq-no-results-icon">
+                    <FiSearch />
+                  </span>
+                  <h3>No help articles found</h3>
+                  <p>Try a different keyword or contact support directly.</p>
+                  <button type="button" onClick={() => setSearchQuery("")}>
+                    Clear search
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section className="support-hours-card">
+            <span className="support-hours-icon">
+              <FiClock />
+            </span>
+            <div>
+              <small>SUPPORT HOURS</small>
+              <strong>Monday to Friday, 9 AM to 6 PM</strong>
+              <p>Email requests can be sent at any time.</p>
+            </div>
+          </section>
+        </main>
+      </div>
+
+      <div className="help-bottom-viewport">
+        <nav className="help-bottom-navigation" aria-label="Primary navigation">
+          {footerItems.map(({ label, path, icon: Icon }) => {
+            const active = isFooterActive(path);
+
+            return (
+              <button
+                type="button"
+                key={path}
+                className={`help-nav-item ${active ? "active" : ""}`}
+                aria-current={active ? "page" : undefined}
+                onClick={() => {
+                  if (location.pathname !== path) {
+                    navigate(path);
+                  }
+                }}
+              >
+                <span className="help-nav-icon">
+                  <Icon />
+                </span>
+                <span>{label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+    </>
   );
 }
-
-export default HelpSupport;

@@ -1,831 +1,589 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
-    FiArrowLeft,
-    FiSliders,
-    FiChevronDown,
-    FiPhone,
-    FiMessageSquare,
-    FiHome,
-    FiSearch,
-    FiClock,
-    FiMapPin,
-    FiX,
+  FiArrowLeft,
+  FiChevronDown,
+  FiClock,
+  FiHome,
+  FiMapPin,
+  FiMessageSquare,
+  FiPhone,
+  FiRefreshCw,
+  FiSearch,
+  FiSliders,
+  FiStar,
+  FiX,
 } from "react-icons/fi";
-
+import logo from "../../assets/logo.jpeg";
 import "./VendorSearch.css";
 
-const API_URL =
-    import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-function VendorSearch() {
-    const navigate = useNavigate();
+const fallbackVendorImage =
+  "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=500&q=80";
 
-    // =====================================================
-    // STATE
-    // =====================================================
+const quickSearches = [
+  "Plumbing",
+  "Electrical",
+  "Cleaning",
+  "Beauty",
+  "HVAC",
+];
 
-    const [searchText, setSearchText] = useState("");
+const footerItems = [
+  { label: "Home", path: "/userScreen", icon: FiHome },
+  { label: "Search", path: "/vendorSearch", icon: FiSearch },
+  { label: "History", path: "/userHistory", icon: FiClock },
+];
 
-    const [allVendors, setAllVendors] = useState([]);
+const getStartingPrice = (vendor) => {
+  const price = vendor.starting_price ?? vendor.price;
 
-    const [hasSearched, setHasSearched] = useState(false);
+  if (price === null || price === undefined || price === "") {
+    return null;
+  }
 
-    const [loading, setLoading] = useState(false);
+  const parsedPrice = Number(price);
+  return Number.isFinite(parsedPrice) ? parsedPrice : null;
+};
 
-    const [error, setError] = useState("");
+const formatPrice = (value) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(value);
 
-    // Filters
-    const [priceFilter, setPriceFilter] = useState("default");
-    const [distanceFilter, setDistanceFilter] = useState("default");
-    const [ratingFilter, setRatingFilter] = useState("default");
+export default function VendorSearch() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-    // =====================================================
-    // FETCH EXISTING VENDORS API
-    // =====================================================
+  const initialSearch = searchParams.get("search") || "";
 
-    useEffect(() => {
-        const fetchVendors = async () => {
-            try {
-                setLoading(true);
-                setError("");
+  const [searchText, setSearchText] = useState(initialSearch);
+  const [allVendors, setAllVendors] = useState([]);
+  const [hasSearched, setHasSearched] = useState(Boolean(initialSearch));
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [priceFilter, setPriceFilter] = useState("default");
+  const [distanceFilter, setDistanceFilter] = useState("default");
+  const [ratingFilter, setRatingFilter] = useState("default");
 
-                const response = await fetch(
-                    `${API_URL}/api/vendors`
-                );
+  const fetchVendors = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-                if (!response.ok) {
-                    throw new Error("Failed to fetch vendors");
-                }
+      const response = await fetch(`${API_URL}/api/vendors`);
+      const result = await response.json();
 
-                const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Failed to fetch vendors");
+      }
 
-                /*
-                  Existing API response:
-        
-                  {
-                    success: true,
-                    count: ...,
-                    data: [...]
-                  }
-                */
+      setAllVendors(Array.isArray(result.data) ? result.data : []);
+    } catch (requestError) {
+      console.error("Vendor fetch error:", requestError);
+      setAllVendors([]);
+      setError("Unable to load service providers. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                setAllVendors(result.data || []);
-            } catch (err) {
-                console.error("Vendor fetch error:", err);
+  useEffect(() => {
+    fetchVendors();
+  }, []);
 
-                setError(
-                    "Unable to load service providers."
-                );
-            } finally {
-                setLoading(false);
-            }
-        };
+  const filteredVendors = useMemo(() => {
+    if (!hasSearched || !searchText.trim()) {
+      return [];
+    }
 
-        fetchVendors();
-    }, []);
+    const query = searchText.trim().toLowerCase();
 
-    // =====================================================
-    // SEARCH + FILTER LOGIC
-    // =====================================================
+    const results = allVendors.filter((vendor) => {
+      const searchableText = [
+        vendor.name,
+        vendor.service_type,
+        vendor.description,
+        vendor.address,
+        vendor.city,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
 
-    const filteredVendors = useMemo(() => {
-        if (!hasSearched || !searchText.trim()) {
-            return [];
+      return searchableText.includes(query);
+    });
+
+    return [...results].sort((a, b) => {
+      if (priceFilter !== "default") {
+        const firstPrice = getStartingPrice(a);
+        const secondPrice = getStartingPrice(b);
+        const priceA = firstPrice ?? (priceFilter === "low" ? Infinity : 0);
+        const priceB = secondPrice ?? (priceFilter === "low" ? Infinity : 0);
+        const priceDifference =
+          priceFilter === "low" ? priceA - priceB : priceB - priceA;
+
+        if (priceDifference !== 0) {
+          return priceDifference;
         }
+      }
 
-        const query = searchText.trim().toLowerCase();
+      if (distanceFilter !== "default") {
+        const distanceA = Number(a.distance ?? Infinity);
+        const distanceB = Number(b.distance ?? Infinity);
+        const distanceDifference =
+          distanceFilter === "near"
+            ? distanceA - distanceB
+            : distanceB - distanceA;
 
-        // ---------------------------------------------------
-        // SEARCH
-        // ---------------------------------------------------
-
-        let results = allVendors.filter((vendor) => {
-            const name =
-                vendor.name?.toLowerCase() || "";
-
-            const service =
-                vendor.service_type?.toLowerCase() || "";
-
-            const description =
-                vendor.description?.toLowerCase() || "";
-
-            const address =
-                vendor.address?.toLowerCase() || "";
-
-            const city =
-                vendor.city?.toLowerCase() || "";
-
-            return (
-                name.includes(query) ||
-                service.includes(query) ||
-                description.includes(query) ||
-                address.includes(query) ||
-                city.includes(query)
-            );
-        });
-
-        /*
-          Example:
-    
-          Search:
-          "electrician"
-    
-          Matches:
-          service_type = Electrician
-    
-          Search:
-          "kukatpally"
-    
-          Matches:
-          address/city = Kukatpally
-        */
-
-        // ===================================================
-        // PRICE FILTER
-        // ===================================================
-
-        if (priceFilter === "low") {
-            results.sort((a, b) => {
-                const priceA =
-                    Number(
-                        a.starting_price ??
-                        a.price ??
-                        Infinity
-                    );
-
-                const priceB =
-                    Number(
-                        b.starting_price ??
-                        b.price ??
-                        Infinity
-                    );
-
-                return priceA - priceB;
-            });
+        if (distanceDifference !== 0) {
+          return distanceDifference;
         }
+      }
 
-        if (priceFilter === "high") {
-            results.sort((a, b) => {
-                const priceA =
-                    Number(
-                        a.starting_price ??
-                        a.price ??
-                        0
-                    );
+      if (ratingFilter !== "default") {
+        const ratingA = Number(a.rating || 0);
+        const ratingB = Number(b.rating || 0);
+        return ratingFilter === "high"
+          ? ratingB - ratingA
+          : ratingA - ratingB;
+      }
 
-                const priceB =
-                    Number(
-                        b.starting_price ??
-                        b.price ??
-                        0
-                    );
+      return Number(b.is_premium || 0) - Number(a.is_premium || 0);
+    });
+  }, [
+    allVendors,
+    searchText,
+    hasSearched,
+    priceFilter,
+    distanceFilter,
+    ratingFilter,
+  ]);
 
-                return priceB - priceA;
-            });
-        }
+  const activeFilterCount = [priceFilter, distanceFilter, ratingFilter].filter(
+    (value) => value !== "default"
+  ).length;
 
-        // ===================================================
-        // DISTANCE FILTER
-        // ===================================================
+  const handleSearch = (value = searchText) => {
+    const query = value.trim();
 
-        if (distanceFilter === "near") {
-            results.sort((a, b) => {
-                const distanceA =
-                    Number(a.distance ?? Infinity);
+    if (!query) {
+      setHasSearched(false);
+      setSearchParams({});
+      return;
+    }
 
-                const distanceB =
-                    Number(b.distance ?? Infinity);
+    setSearchText(query);
+    setHasSearched(true);
+    setSearchParams({ search: query });
+  };
 
-                return distanceA - distanceB;
-            });
-        }
+  const handleClearSearch = () => {
+    setSearchText("");
+    setHasSearched(false);
+    setFiltersOpen(false);
+    setPriceFilter("default");
+    setDistanceFilter("default");
+    setRatingFilter("default");
+    setSearchParams({});
+  };
 
-        if (distanceFilter === "far") {
-            results.sort((a, b) => {
-                const distanceA =
-                    Number(a.distance ?? 0);
+  const handleCall = (phone) => {
+    if (phone) {
+      window.location.href = `tel:${phone}`;
+    }
+  };
 
-                const distanceB =
-                    Number(b.distance ?? 0);
+  const handleWhatsApp = (phone) => {
+    if (!phone) {
+      return;
+    }
 
-                return distanceB - distanceA;
-            });
-        }
+    const cleanNumber = String(phone).replace(/\D/g, "");
+    const whatsappNumber =
+      cleanNumber.length === 10 ? `91${cleanNumber}` : cleanNumber;
 
-        // ===================================================
-        // RATING FILTER
-        // ===================================================
+    window.open(
+      `https://wa.me/${whatsappNumber}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  };
 
-        if (ratingFilter === "high") {
-            results.sort(
-                (a, b) =>
-                    Number(b.rating || 0) -
-                    Number(a.rating || 0)
-            );
-        }
+  const isFooterActive = (path) => {
+    if (path === "/vendorSearch") {
+      return location.pathname.startsWith("/vendorSearch");
+    }
 
-        if (ratingFilter === "low") {
-            results.sort(
-                (a, b) =>
-                    Number(a.rating || 0) -
-                    Number(b.rating || 0)
-            );
-        }
+    if (path === "/userHistory") {
+      return location.pathname.startsWith("/userHistory");
+    }
 
-        return results;
-    }, [
-        allVendors,
-        searchText,
-        hasSearched,
-        priceFilter,
-        distanceFilter,
-        ratingFilter,
-    ]);
+    return location.pathname === path;
+  };
 
-    // =====================================================
-    // SEARCH
-    // =====================================================
+  return (
+    <>
+      <div className="vendor-search-page">
+        <header className="vendor-search-header">
+          <button
+            type="button"
+            className="vendor-back-button"
+            onClick={() => navigate("/userScreen")}
+            aria-label="Go to home"
+          >
+            <FiArrowLeft />
+          </button>
 
-    const handleSearch = () => {
-        const query = searchText.trim();
+          <div className="vendor-search-brand">
+            <img src={logo} alt="Milieu Global" />
+            <div>
+              <small>DISCOVER SERVICES</small>
+              <strong>Search Providers</strong>
+            </div>
+          </div>
 
-        if (!query) {
-            setHasSearched(false);
-            return;
-        }
+          <button
+            type="button"
+            className={`filter-icon-button ${filtersOpen ? "active" : ""}`}
+            onClick={() => setFiltersOpen((current) => !current)}
+            aria-label="Toggle filters"
+            aria-expanded={filtersOpen}
+          >
+            <FiSliders />
+            {activeFilterCount > 0 && (
+              <span className="filter-count">{activeFilterCount}</span>
+            )}
+          </button>
+        </header>
 
-        setHasSearched(true);
-    };
+        <section className="search-hero">
+          <div className="search-hero-copy">
+            <span>TRUSTED LOCAL PROFESSIONALS</span>
+            <h1>What service do you need?</h1>
+            <p>Search by service, provider name, city, or locality.</p>
+          </div>
 
-    // =====================================================
-    // ENTER KEY
-    // =====================================================
+          <form
+            className="vendor-search-bar-wrapper"
+            onSubmit={(event) => {
+              event.preventDefault();
+              handleSearch();
+            }}
+          >
+            <div className="vendor-search-input-container">
+              <FiSearch className="search-input-icon" />
+              <input
+                type="search"
+                value={searchText}
+                onChange={(event) => setSearchText(event.target.value)}
+                placeholder="Plumber, electrician, Hyderabad..."
+                className="vendor-search-input"
+                autoComplete="off"
+              />
 
-    const handleKeyDown = (event) => {
-        if (event.key === "Enter") {
-            handleSearch();
-        }
-    };
-
-    // =====================================================
-    // CLEAR SEARCH
-    // =====================================================
-
-    const handleClearSearch = () => {
-        setSearchText("");
-        setHasSearched(false);
-
-        setPriceFilter("default");
-        setDistanceFilter("default");
-        setRatingFilter("default");
-    };
-
-    // =====================================================
-    // BACK
-    // =====================================================
-
-    const handleBack = () => {
-        navigate("/userScreen");
-    };
-
-    // =====================================================
-    // HOME
-    // =====================================================
-
-    const handleHome = () => {
-        navigate("/userScreen");
-    };
-
-    // =====================================================
-    // HISTORY
-    // =====================================================
-
-    const handleHistory = () => {
-        navigate("/userHistory");
-    };
-
-    // =====================================================
-    // CALL
-    // =====================================================
-
-    const handleCall = (phone) => {
-        if (!phone) return;
-
-        window.location.href = `tel:${phone}`;
-    };
-
-    // =====================================================
-    // WHATSAPP
-    // =====================================================
-
-    const handleWhatsApp = (phone) => {
-        if (!phone) return;
-
-        const cleanNumber = phone.replace(/\D/g, "");
-
-        const whatsappNumber =
-            cleanNumber.length === 10
-                ? `91${cleanNumber}`
-                : cleanNumber;
-
-        window.open(
-            `https://wa.me/${whatsappNumber}`,
-            "_blank"
-        );
-    };
-
-    // =====================================================
-    // FORMAT PRICE
-    // =====================================================
-
-    const getStartingPrice = (vendor) => {
-        const price =
-            vendor.starting_price ??
-            vendor.price;
-
-        if (
-            price === null ||
-            price === undefined ||
-            price === ""
-        ) {
-            return null;
-        }
-
-        return Number(price);
-    };
-
-    // =====================================================
-    // RENDER
-    // =====================================================
-
-    return (
-        <div className="vendor-search-page">
-
-            {/* =================================================
-          HEADER
-          ================================================= */}
-
-            <header className="vendor-search-header">
-
+              {searchText && (
                 <button
-                    className="vendor-back-button"
-                    onClick={handleBack}
-                    aria-label="Go back"
+                  type="button"
+                  className="clear-search-button"
+                  onClick={handleClearSearch}
+                  aria-label="Clear search"
                 >
-                    <FiArrowLeft />
+                  <FiX />
                 </button>
-
-                <div className="search-header-text">
-
-                    <span>
-                        Searching for
-                    </span>
-
-                    <h1>
-                        {searchText.trim()
-                            ? searchText
-                            : "Find a service provider"}
-                    </h1>
-
-                </div>
-
-                <button
-                    className="filter-icon-button"
-                    aria-label="Filters"
-                >
-                    <FiSliders />
-                </button>
-
-            </header>
-
-
-            {/* =================================================
-          SEARCH BAR
-          ================================================= */}
-
-            <div className="vendor-search-bar-wrapper">
-
-                <div className="vendor-search-input-container">
-
-                    <FiSearch className="search-input-icon" />
-
-                    <input
-                        type="text"
-                        value={searchText}
-                        onChange={(e) =>
-                            setSearchText(e.target.value)
-                        }
-                        onKeyDown={handleKeyDown}
-                        placeholder="Search service or location..."
-                        className="vendor-search-input"
-                    />
-
-                    {searchText && (
-                        <button
-                            className="clear-search-button"
-                            onClick={handleClearSearch}
-                            aria-label="Clear search"
-                        >
-                            <FiX />
-                        </button>
-                    )}
-
-                </div>
-
-                <button
-                    className="vendor-search-button"
-                    onClick={handleSearch}
-                >
-                    <FiSearch />
-                    <span>Search</span>
-                </button>
-
+              )}
             </div>
 
+            <button type="submit" className="vendor-search-button">
+              <FiSearch />
+              <span>Search</span>
+            </button>
+          </form>
 
-            {/* =================================================
-          FILTERS
-          ================================================= */}
+          {!hasSearched && (
+            <div className="quick-search-row">
+              {quickSearches.map((item) => (
+                <button
+                  type="button"
+                  key={item}
+                  onClick={() => handleSearch(item)}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
 
-            {hasSearched && filteredVendors.length > 0 && (
+        <section className={`filter-panel ${filtersOpen ? "open" : ""}`}>
+          <div className="filter-panel-heading">
+            <div>
+              <small>SORT RESULTS</small>
+              <h2>Refine your search</h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setPriceFilter("default");
+                setDistanceFilter("default");
+                setRatingFilter("default");
+              }}
+            >
+              Reset
+            </button>
+          </div>
 
-                <div className="vendor-filter-row">
+          <div className="vendor-filter-row">
+            <label className="filter-field">
+              <span>Price</span>
+              <div>
+                <select
+                  value={priceFilter}
+                  onChange={(event) => setPriceFilter(event.target.value)}
+                >
+                  <option value="default">Any price</option>
+                  <option value="low">Low to high</option>
+                  <option value="high">High to low</option>
+                </select>
+                <FiChevronDown />
+              </div>
+            </label>
 
-                    {/* PRICE */}
+            <label className="filter-field">
+              <span>Distance</span>
+              <div>
+                <select
+                  value={distanceFilter}
+                  onChange={(event) => setDistanceFilter(event.target.value)}
+                >
+                  <option value="default">Any distance</option>
+                  <option value="near">Nearest first</option>
+                  <option value="far">Farthest first</option>
+                </select>
+                <FiChevronDown />
+              </div>
+            </label>
 
-                    <select
-                        className="filter-select"
-                        value={priceFilter}
-                        onChange={(e) =>
-                            setPriceFilter(e.target.value)
-                        }
-                    >
-                        <option value="default">
-                            Price
-                        </option>
+            <label className="filter-field">
+              <span>Rating</span>
+              <div>
+                <select
+                  value={ratingFilter}
+                  onChange={(event) => setRatingFilter(event.target.value)}
+                >
+                  <option value="default">Any rating</option>
+                  <option value="high">Highest rated</option>
+                  <option value="low">Lowest rated</option>
+                </select>
+                <FiChevronDown />
+              </div>
+            </label>
+          </div>
+        </section>
 
-                        <option value="low">
-                            Price: Low → High
-                        </option>
+        <main className="vendor-search-content">
+          {loading && (
+            <div className="vendor-result-list" aria-label="Loading providers">
+              {[1, 2, 3].map((item) => (
+                <article className="vendor-result-card search-skeleton" key={item}>
+                  <span className="skeleton-image" />
+                  <span className="skeleton-copy">
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                </article>
+              ))}
+            </div>
+          )}
 
-                        <option value="high">
-                            Price: High → Low
-                        </option>
-                    </select>
+          {!loading && error && (
+            <div className="search-status error">
+              <span className="search-status-icon">
+                <FiRefreshCw />
+              </span>
+              <h2>Providers could not be loaded</h2>
+              <p>{error}</p>
+              <button type="button" onClick={fetchVendors}>
+                Try again
+              </button>
+            </div>
+          )}
 
+          {!loading && !error && !hasSearched && (
+            <div className="search-empty-state">
+              <span className="search-empty-icon">
+                <FiSearch />
+              </span>
+              <h2>Find the right service provider</h2>
+              <p>
+                Enter a service or location above, or choose one of the popular
+                searches.
+              </p>
+            </div>
+          )}
 
-                    {/* DISTANCE */}
-
-                    <select
-                        className="filter-select"
-                        value={distanceFilter}
-                        onChange={(e) =>
-                            setDistanceFilter(e.target.value)
-                        }
-                    >
-                        <option value="default">
-                            Distance
-                        </option>
-
-                        <option value="near">
-                            Nearest First
-                        </option>
-
-                        <option value="far">
-                            Farthest First
-                        </option>
-                    </select>
-
-
-                    {/* RATING */}
-
-                    <select
-                        className="filter-select"
-                        value={ratingFilter}
-                        onChange={(e) =>
-                            setRatingFilter(e.target.value)
-                        }
-                    >
-                        <option value="default">
-                            Rating
-                        </option>
-
-                        <option value="high">
-                            Highest Rated
-                        </option>
-
-                        <option value="low">
-                            Lowest Rated
-                        </option>
-                    </select>
-
-                </div>
+          {!loading &&
+            !error &&
+            hasSearched &&
+            filteredVendors.length === 0 && (
+              <div className="search-status">
+                <span className="search-status-icon">
+                  <FiSearch />
+                </span>
+                <h2>No providers found</h2>
+                <p>Try a broader service name or another location.</p>
+                <button type="button" onClick={handleClearSearch}>
+                  Clear search
+                </button>
+              </div>
             )}
 
+          {!loading &&
+            !error &&
+            hasSearched &&
+            filteredVendors.length > 0 && (
+              <section className="vendor-results">
+                <div className="results-header">
+                  <div>
+                    <small>SEARCH RESULTS</small>
+                    <h2>
+                      {filteredVendors.length}{" "}
+                      {filteredVendors.length === 1 ? "provider" : "providers"}
+                      {" "}found
+                    </h2>
+                  </div>
+                  <span>“{searchText.trim()}”</span>
+                </div>
 
-            {/* =================================================
-          MAIN
-          ================================================= */}
+                <div className="vendor-result-list">
+                  {filteredVendors.map((vendor, index) => {
+                    const startingPrice = getStartingPrice(vendor);
 
-            <main className="vendor-search-content">
+                    return (
+                      <article
+                        className={`vendor-result-card ${
+                          vendor.is_premium ? "premium-card" : ""
+                        }`}
+                        key={vendor.id}
+                        style={{ "--result-index": index }}
+                      >
+                        <div className="vendor-card-top">
+                          <div className="vendor-image-wrap">
+                            <img
+                              src={vendor.image_url || fallbackVendorImage}
+                              alt={vendor.name || "Service provider"}
+                              onError={(event) => {
+                                event.currentTarget.onerror = null;
+                                event.currentTarget.src = fallbackVendorImage;
+                              }}
+                            />
+                            {vendor.is_premium ? (
+                              <span className="premium-badge">Premium</span>
+                            ) : null}
+                          </div>
 
-                {/* =================================================
-            ERROR
-            ================================================= */}
-
-                {error && (
-                    <div className="search-status">
-
-                        <h2>
-                            Something went wrong
-                        </h2>
-
-                        <p>
-                            {error}
-                        </p>
-
-                    </div>
-                )}
-
-
-                {/* =================================================
-            INITIAL STATE
-            ================================================= */}
-
-                {!loading &&
-                    !error &&
-                    !hasSearched && (
-
-                        <div className="search-empty-state">
-
-                            <div className="search-empty-icon">
-                                <FiSearch />
+                          <div className="vendor-main-info">
+                            <div className="vendor-name-row">
+                              <h3>{vendor.name}</h3>
+                              <span className="vendor-rating">
+                                <FiStar />
+                                {Number(vendor.rating || 0).toFixed(1)}
+                              </span>
                             </div>
 
-                            <h2>
-                                Find the right service provider
-                            </h2>
-
-                            <p>
-                                Search for a service or location
-                                to discover available providers.
+                            <p className="vendor-service-type">
+                              {vendor.service_type || "General Service"}
                             </p>
 
-                        </div>
-                    )}
+                            <div className="vendor-meta">
+                              {Boolean(vendor.is_verified) && (
+                                <span className="verified-badge">Verified</span>
+                              )}
 
-
-                {/* =================================================
-            LOADING
-            ================================================= */}
-
-                {loading && (
-
-                    <div className="search-status">
-
-                        <div className="loading-spinner"></div>
-
-                        <p>
-                            Loading service providers...
-                        </p>
-
-                    </div>
-                )}
-
-
-                {/* =================================================
-            NO RESULTS
-            ================================================= */}
-
-                {!loading &&
-                    !error &&
-                    hasSearched &&
-                    filteredVendors.length === 0 && (
-
-                        <div className="search-status">
-
-                            <div className="no-results-icon">
-                                <FiSearch />
+                              <span className="vendor-location">
+                                <FiMapPin />
+                                {vendor.city || vendor.address || "Nearby"}
+                              </span>
                             </div>
 
-                            <h2>
-                                No vendors found
-                            </h2>
-
-                            <p>
-                                Try another service or location.
-                            </p>
-
+                            {startingPrice !== null && (
+                              <p className="starting-price">
+                                Starts from <strong>{formatPrice(startingPrice)}</strong>
+                              </p>
+                            )}
+                          </div>
                         </div>
-                    )}
 
+                        <div className="vendor-actions">
+                          <button
+                            type="button"
+                            className="view-provider-button"
+                            onClick={() => navigate(`/vendor/${vendor.id}`)}
+                          >
+                            View details
+                          </button>
 
-                {/* =================================================
-            RESULTS
-            ================================================= */}
+                          <button
+                            type="button"
+                            className="call-button"
+                            onClick={() => handleCall(vendor.phone)}
+                            disabled={!vendor.phone}
+                          >
+                            <FiPhone /> Call
+                          </button>
 
-                {!loading &&
-                    !error &&
-                    hasSearched &&
-                    filteredVendors.length > 0 && (
-
-                        <div className="vendor-results">
-
-                            <div className="results-header">
-
-                                <h2>
-                                    {filteredVendors.length}{" "}
-                                    {filteredVendors.length === 1
-                                        ? "provider"
-                                        : "providers"}{" "}
-                                    found
-                                </h2>
-
-                            </div>
-
-
-                            {filteredVendors.map((vendor) => {
-
-                                const startingPrice =
-                                    getStartingPrice(vendor);
-
-                                return (
-
-                                    <div
-                                        className={`vendor-card ${vendor.is_premium
-                                                ? "premium-card"
-                                                : ""
-                                            }`}
-                                        key={vendor.id}
-                                    >
-
-                                        {/* -----------------------------------
-                        VENDOR INFORMATION
-                        ----------------------------------- */}
-
-                                        <div className="vendor-card-top">
-
-                                            <div className="vendor-image">
-
-                                                {vendor.image_url ? (
-
-                                                    <img
-                                                        src={vendor.image_url}
-                                                        alt={vendor.name}
-                                                    />
-
-                                                ) : (
-
-                                                    <div className="vendor-image-placeholder">
-                                                        MG
-                                                    </div>
-
-                                                )}
-
-                                            </div>
-
-
-                                            <div className="vendor-main-info">
-
-                                                <div className="vendor-name-row">
-
-                                                    <h3>
-                                                        {vendor.name}
-                                                    </h3>
-
-                                                    {Boolean(vendor.is_premium) && (
-                                                        <span className="premium-badge">
-                                                            ★ PREMIUM
-                                                        </span>
-                                                    )}
-
-                                                </div>
-
-
-                                                <div className="vendor-meta">
-
-                                                    {Boolean(vendor.is_verified) && (
-                                                        <span className="verified-badge">
-                                                            ✓ Verified
-                                                        </span>
-                                                    )}
-
-                                                    {vendor.distance !==
-                                                        undefined &&
-                                                        vendor.distance !==
-                                                        null && (
-
-                                                            <span className="distance">
-
-                                                                <FiMapPin />
-
-                                                                {Number(
-                                                                    vendor.distance
-                                                                ).toFixed(1)}{" "}
-                                                                km away
-
-                                                            </span>
-                                                        )}
-
-                                                </div>
-
-
-                                                {startingPrice !== null && (
-
-                                                    <p className="starting-price">
-                                                        Starting ₹
-                                                        {startingPrice}
-                                                    </p>
-
-                                                )}
-
-                                            </div>
-
-                                        </div>
-
-
-                                        {/* -----------------------------------
-                        ACTIONS
-                        ----------------------------------- */}
-
-                                        <div className="vendor-actions">
-
-                                            <button
-                                                className="call-button"
-                                                onClick={() =>
-                                                    handleCall(
-                                                        vendor.phone
-                                                    )
-                                                }
-                                            >
-                                                <FiPhone />
-                                                Call Now
-                                            </button>
-
-
-                                            <button
-                                                className="whatsapp-button"
-                                                onClick={() =>
-                                                    handleWhatsApp(
-                                                        vendor.whatsapp ||
-                                                        vendor.phone
-                                                    )
-                                                }
-                                            >
-                                                <FiMessageSquare />
-                                                WhatsApp
-                                            </button>
-
-                                        </div>
-
-                                    </div>
-                                );
-                            })}
-
+                          <button
+                            type="button"
+                            className="whatsapp-button"
+                            onClick={() =>
+                              handleWhatsApp(vendor.whatsapp || vendor.phone)
+                            }
+                            disabled={!vendor.whatsapp && !vendor.phone}
+                          >
+                            <FiMessageSquare /> Chat
+                          </button>
                         </div>
-                    )}
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+        </main>
+      </div>
 
-            </main>
+      <div className="search-bottom-viewport">
+        <nav className="bottom-navigation" aria-label="Primary navigation">
+          {footerItems.map(({ label, path, icon: Icon }) => {
+            const active = isFooterActive(path);
 
-
-            {/* =================================================
-          BOTTOM NAVIGATION
-          ================================================= */}
-
-            <div className="bottom-navigation">
-
-                <button
-                    className="bottom-nav-item"
-                    onClick={() => navigate("/userScreen")}
-                >
-                    <FiHome />
-                    <span>Home</span>
-                </button>
-
-                <button
-                    className="bottom-nav-item active"
-                    onClick={() => {
-                        // Already on Vendor Search
-                    }}
-                >
-                    <FiSearch />
-                    <span>Search</span>
-                </button>
-
-                <button
-                    className="bottom-nav-item"
-                    onClick={() => navigate("/userHistory")}
-                >
-                    <FiClock />
-                    <span>History</span>
-                </button>
-
-            </div>
-
-        </div>
-    );
+            return (
+              <button
+                type="button"
+                key={path}
+                className={`bottom-nav-item ${active ? "active" : ""}`}
+                aria-current={active ? "page" : undefined}
+                onClick={() => {
+                  if (location.pathname !== path) {
+                    navigate(path);
+                  }
+                }}
+              >
+                <span className="bottom-nav-icon">
+                  <Icon />
+                </span>
+                <span>{label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+    </>
+  );
 }
-
-export default VendorSearch;

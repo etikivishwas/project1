@@ -1,571 +1,384 @@
-import React, {
-  useEffect,
-  useState,
-} from "react";
-
-import { useNavigate } from "react-router-dom";
-
+import React, { useCallback, useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   FiArrowLeft,
-  FiClock,
   FiBookmark,
-  FiSettings,
-  FiHelpCircle,
   FiChevronRight,
-  FiLogOut,
+  FiClock,
+  FiHelpCircle,
   FiHome,
+  FiLogOut,
+  FiMail,
+  FiRefreshCw,
   FiSearch,
+  FiSettings,
+  FiShield,
 } from "react-icons/fi";
-
 import { FaStore } from "react-icons/fa";
-
+import logo from "../../assets/logo.jpeg";
 import "./UserProfile.css";
 
-function UserProfile() {
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+const profileMenuItems = [
+  {
+    label: "Service History",
+    description: "Review previous service interactions",
+    icon: FiClock,
+    path: "/userHistory",
+  },
+  {
+    label: "Saved Providers",
+    description: "View providers saved for later",
+    icon: FiBookmark,
+    path: "/savedProviders",
+  },
+  {
+    label: "Settings & Privacy",
+    description: "Manage account and privacy preferences",
+    icon: FiSettings,
+    path: "/userSettings",
+  },
+  {
+    label: "Help & Support",
+    description: "Get assistance or contact support",
+    icon: FiHelpCircle,
+    path: "/helpSupport",
+  },
+];
+
+const footerItems = [
+  { label: "Home", path: "/userScreen", icon: FiHome },
+  { label: "Search", path: "/vendorSearch", icon: FiSearch },
+  { label: "History", path: "/userHistory", icon: FiClock },
+];
+
+const getStoredToken = () =>
+  localStorage.getItem("token") || sessionStorage.getItem("token");
+
+const getStoredUser = () => {
+  const value =
+    localStorage.getItem("user") || sessionStorage.getItem("user");
+
+  if (!value) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+};
+
+const getInitials = (name) => {
+  if (!name?.trim()) {
+    return "U";
+  }
+
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+};
+
+export default function UserProfile() {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // =====================================================
-  // STATE
-  // =====================================================
-
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => getStoredUser());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // =====================================================
-  // API URL
-  // =====================================================
+  const fetchCurrentUser = useCallback(async () => {
+    const token = getStoredToken();
 
-  const API_URL =
-    import.meta.env.VITE_API_URL ||
-    "http://localhost:5000";
+    if (!token) {
+      navigate("/login", { replace: true });
+      return;
+    }
 
-  // =====================================================
-  // GET CURRENT TOKEN
-  // =====================================================
+    try {
+      setLoading(true);
+      setError("");
 
-  const getToken = () => {
-    return (
-      localStorage.getItem("token") ||
-      sessionStorage.getItem("token")
-    );
-  };
+      const response = await fetch(`${API_URL}/api/auth/me`, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-  // =====================================================
-  // FETCH CURRENT LOGGED-IN USER
-  // =====================================================
+      const data = await response.json().catch(() => ({}));
+
+      if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("user");
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to load profile.");
+      }
+
+      const currentUser = data.user || data.data || data;
+      setUser(currentUser);
+
+      const storage = localStorage.getItem("token")
+        ? localStorage
+        : sessionStorage;
+      storage.setItem("user", JSON.stringify(currentUser));
+    } catch (requestError) {
+      console.error("Failed to fetch current user:", requestError);
+
+      if (!user) {
+        setError(requestError.message || "Failed to load profile.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [navigate, user]);
 
   useEffect(() => {
-    const fetchCurrentUser = async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const token = getToken();
-
-        // -------------------------------------------------
-        // NO TOKEN
-        // -------------------------------------------------
-
-        if (!token) {
-          navigate("/login");
-          return;
-        }
-
-        // -------------------------------------------------
-        // GET CURRENT USER
-        // -------------------------------------------------
-
-        const response = await fetch(
-          `${API_URL}/api/auth/me`,
-          {
-            method: "GET",
-
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        // -------------------------------------------------
-        // TOKEN EXPIRED / INVALID
-        // -------------------------------------------------
-
-        if (
-          response.status === 401 ||
-          response.status === 403
-        ) {
-          localStorage.removeItem("token");
-          sessionStorage.removeItem("token");
-
-          navigate("/login");
-          return;
-        }
-
-        // -------------------------------------------------
-        // OTHER ERROR
-        // -------------------------------------------------
-
-        if (!response.ok) {
-          const errorData =
-            await response.json().catch(() => ({}));
-
-          throw new Error(
-            errorData.message ||
-              "Failed to load profile."
-          );
-        }
-
-        // -------------------------------------------------
-        // RESPONSE
-        // -------------------------------------------------
-
-        const data = await response.json();
-
-        setUser(data.user);
-
-      } catch (err) {
-        console.error(
-          "Failed to fetch current user:",
-          err
-        );
-
-        setError(
-          err.message ||
-            "Failed to load profile."
-        );
-
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchCurrentUser();
-  }, [navigate, API_URL]);
-
-  // =====================================================
-  // GET USER INITIALS
-  // =====================================================
-
-  const getInitials = (name) => {
-    if (!name) {
-      return "U";
-    }
-
-    const parts = name
-      .trim()
-      .split(/\s+/);
-
-    if (parts.length === 1) {
-      return parts[0]
-        .charAt(0)
-        .toUpperCase();
-    }
-
-    return (
-      parts[0].charAt(0) +
-      parts[parts.length - 1].charAt(0)
-    ).toUpperCase();
-  };
-
-  // =====================================================
-  // NAVIGATION HANDLERS
-  // =====================================================
-
-  const handleBack = () => {
-    navigate("/userScreen");
-  };
-
-  const handleHome = () => {
-    navigate("/userScreen");
-  };
-
-  const handleSearch = () => {
-    console.log(
-      "Search page not developed yet"
-    );
-  };
-
-  const handleHistory = () => {
-    navigate("/userHistory");
-  };
-
-  const handleServiceHistory = () => {
-    navigate("/userHistory");
-  };
-
-  const handleHelpSupport = () => {
-    navigate("/helpSupport");
-  }
-
-  const handleSavedProviders = () => {
-    console.log(
-      "Saved Providers page not developed yet"
-    );
-  };
-
-  const handleSettings = () => {
-    console.log(
-      "Settings & Privacy page not developed yet"
-    );
-  };
-
-  const handleVendorRegistration = () => {
-    navigate("/vendorRegistration");
-  };
-
-  // =====================================================
-  // LOGOUT
-  // =====================================================
+  }, [fetchCurrentUser]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     sessionStorage.removeItem("token");
-
-    navigate("/login");
+    sessionStorage.removeItem("user");
+    navigate("/login", { replace: true });
   };
 
-  // =====================================================
-  // LOADING
-  // =====================================================
+  const isFooterActive = (path) => {
+    if (path === "/vendorSearch") {
+      return location.pathname.startsWith("/vendorSearch");
+    }
 
-  if (loading) {
+    if (path === "/userHistory") {
+      return location.pathname.startsWith("/userHistory");
+    }
+
+    return location.pathname === path;
+  };
+
+  if (loading && !user) {
     return (
-      <div className="profile-page">
-
+      <div className="profile-page profile-state-page">
         <header className="profile-header">
           <button
+            type="button"
             className="profile-back-button"
-            onClick={handleBack}
-            aria-label="Go back"
+            onClick={() => navigate("/userScreen")}
+            aria-label="Go to home"
           >
             <FiArrowLeft />
           </button>
-
-          <h1>My Profile</h1>
+          <div className="profile-header-brand">
+            <img src={logo} alt="Milieu Global" />
+            <span>My Profile</span>
+          </div>
+          <span className="profile-header-spacer" />
         </header>
 
         <main className="profile-content">
-
-          <section className="profile-info">
-
-            <div className="profile-avatar">
-              U
-            </div>
-
-            <h2>
-              Loading...
-            </h2>
-
+          <section className="profile-loading-card">
+            <span className="profile-skeleton-avatar" />
+            <span className="profile-skeleton-line wide" />
+            <span className="profile-skeleton-line short" />
           </section>
-
         </main>
-
       </div>
     );
   }
 
-  // =====================================================
-  // ERROR
-  // =====================================================
-
-  if (error) {
+  if (error && !user) {
     return (
-      <div className="profile-page">
-
+      <div className="profile-page profile-state-page">
         <header className="profile-header">
           <button
+            type="button"
             className="profile-back-button"
-            onClick={handleBack}
-            aria-label="Go back"
+            onClick={() => navigate("/userScreen")}
+            aria-label="Go to home"
           >
             <FiArrowLeft />
           </button>
-
-          <h1>My Profile</h1>
+          <div className="profile-header-brand">
+            <img src={logo} alt="Milieu Global" />
+            <span>My Profile</span>
+          </div>
+          <span className="profile-header-spacer" />
         </header>
 
         <main className="profile-content">
-
-          <section className="profile-info">
-
-            <div className="profile-avatar">
-              U
-            </div>
-
-            <h2>
-              Unable to load profile
-            </h2>
-
-            <p>
-              {error}
-            </p>
-
+          <section className="profile-error-card">
+            <span className="profile-error-icon">
+              <FiRefreshCw />
+            </span>
+            <h2>Profile could not be loaded</h2>
+            <p>{error}</p>
+            <button type="button" onClick={fetchCurrentUser}>
+              Try again
+            </button>
           </section>
-
         </main>
-
       </div>
     );
   }
-
-  // =====================================================
-  // PROFILE
-  // =====================================================
 
   return (
-    <div className="profile-page">
+    <>
+      <div className="profile-page">
+        <header className="profile-header">
+          <button
+            type="button"
+            className="profile-back-button"
+            onClick={() => navigate("/userScreen")}
+            aria-label="Go to home"
+          >
+            <FiArrowLeft />
+          </button>
 
-      {/* =================================================
-          HEADER
-          ================================================= */}
-
-      <header className="profile-header">
-
-        <button
-          className="profile-back-button"
-          onClick={handleBack}
-          aria-label="Go back"
-        >
-          <FiArrowLeft />
-        </button>
-
-        <h1>
-          My Profile
-        </h1>
-
-      </header>
-
-
-      {/* =================================================
-          MAIN CONTENT
-          ================================================= */}
-
-      <main className="profile-content">
-
-        {/* =================================================
-            PROFILE INFORMATION
-            ================================================= */}
-
-        <section className="profile-info">
-
-          <div className="profile-avatar">
-            {getInitials(user?.name)}
+          <div className="profile-header-brand">
+            <img src={logo} alt="Milieu Global" />
+            <span>My Profile</span>
           </div>
 
-          <h2>
-            {user?.name || "User"}
-          </h2>
+          <span className="profile-header-spacer" />
+        </header>
 
-        </section>
+        <main className="profile-content">
+          <section className="profile-hero-card">
+            <div className="profile-hero-decoration" />
 
-
-        {/* =================================================
-            PROFILE MENU
-            ================================================= */}
-
-        <section className="profile-menu">
-
-          {/* SERVICE HISTORY */}
-
-          <button
-            className="profile-menu-item"
-            onClick={handleServiceHistory}
-          >
-            <div className="profile-menu-left">
-
-              <FiClock />
-
-              <span>
-                Service History
-              </span>
-
+            <div className="profile-avatar-ring">
+              {user?.avatarUrl || user?.avatar_url || user?.profileImage ? (
+                <img
+                  src={
+                    user.avatarUrl || user.avatar_url || user.profileImage
+                  }
+                  alt="User profile"
+                />
+              ) : (
+                <span>{getInitials(user?.name)}</span>
+              )}
             </div>
 
-            <FiChevronRight
-              className="profile-menu-arrow"
-            />
+            <h1>{user?.name || "User"}</h1>
 
-          </button>
+            {user?.email && (
+              <p className="profile-email">
+                <FiMail />
+                <span>{user.email}</span>
+              </p>
+            )}
 
+            <div className="profile-security-chip">
+              <FiShield /> Verified account
+            </div>
+          </section>
 
-          {/* SAVED PROVIDERS */}
-
-          <button
-            className="profile-menu-item"
-            onClick={handleSavedProviders}
-          >
-            <div className="profile-menu-left">
-
-              <FiBookmark />
-
-              <span>
-                Saved Providers
-              </span>
-
+          <section className="profile-section">
+            <div className="profile-section-heading">
+              <div>
+                <small>YOUR ACCOUNT</small>
+                <h2>Manage profile</h2>
+              </div>
             </div>
 
-            <FiChevronRight
-              className="profile-menu-arrow"
-            />
+            <div className="profile-menu">
+              {profileMenuItems.map(
+                ({ label, description, icon: Icon, path }, index) => (
+                  <button
+                    type="button"
+                    className="profile-menu-item"
+                    key={label}
+                    onClick={() => navigate(path)}
+                    style={{ "--profile-item-index": index }}
+                  >
+                    <span className="profile-menu-icon">
+                      <Icon />
+                    </span>
 
-          </button>
+                    <span className="profile-menu-copy">
+                      <strong>{label}</strong>
+                      <small>{description}</small>
+                    </span>
 
+                    <FiChevronRight className="profile-menu-arrow" />
+                  </button>
+                )
+              )}
+            </div>
+          </section>
 
-          {/* SETTINGS */}
+          <section className="vendor-cta">
+            <span className="vendor-cta-icon">
+              <FaStore />
+            </span>
 
-          <button
-            className="profile-menu-item"
-            onClick={handleSettings}
-          >
-            <div className="profile-menu-left">
-
-              <FiSettings />
-
-              <span>
-                Settings &amp; Privacy
-              </span>
-
+            <div className="vendor-cta-copy">
+              <small>GROW YOUR BUSINESS</small>
+              <h2>Join as a Vendor</h2>
+              <p>
+                List services, reach nearby customers, and manage enquiries in
+                one place.
+              </p>
             </div>
 
-            <FiChevronRight
-              className="profile-menu-arrow"
-            />
+            <button
+              type="button"
+              className="vendor-get-started"
+              onClick={() => navigate("/vendorRegistration")}
+            >
+              Get started <FiChevronRight />
+            </button>
+          </section>
 
+          <button type="button" className="logout-button" onClick={handleLogout}>
+            <FiLogOut />
+            <span>Log out</span>
           </button>
 
+          <p className="profile-version">Milieu Global customer app</p>
+        </main>
+      </div>
 
-          {/* HELP */}
+      <div className="profile-bottom-viewport">
+        <nav className="profile-bottom-navigation" aria-label="Primary navigation">
+          {footerItems.map(({ label, path, icon: Icon }) => {
+            const active = isFooterActive(path);
 
-          <button
-            className="profile-menu-item"
-            onClick={handleHelpSupport}
-          >
-            <div className="profile-menu-left">
-
-              <FiHelpCircle />
-
-              <span>
-                Help &amp; Support
-              </span>
-
-            </div>
-
-            <FiChevronRight
-              className="profile-menu-arrow"
-            />
-
-          </button>
-
-        </section>
-
-
-        {/* =================================================
-            JOIN AS VENDOR
-            ================================================= */}
-
-        <section className="vendor-cta">
-
-          <div className="vendor-cta-title">
-
-            <FaStore />
-
-            <h2>
-              Join as a Vendor
-            </h2>
-
-          </div>
-
-          <p>
-            List your services and reach more clients
-            in your area.
-          </p>
-
-          <button
-            className="vendor-get-started"
-            onClick={handleVendorRegistration}
-          >
-            Get Started
-          </button>
-
-        </section>
-
-
-        {/* =================================================
-            LOGOUT
-            ================================================= */}
-
-        <button
-          className="logout-button"
-          onClick={handleLogout}
-        >
-
-          <FiLogOut />
-
-          <span>
-            Log Out
-          </span>
-
-        </button>
-
-      </main>
-
-
-      {/* =================================================
-          BOTTOM NAVIGATION
-          ================================================= */}
-
-      <nav className="profile-bottom-navigation">
-
-        {/* HOME */}
-
-        <button
-          className="profile-nav-item"
-          onClick={handleHome}
-        >
-          <FiHome />
-
-          <span>
-            Home
-          </span>
-
-        </button>
-
-
-        {/* SEARCH */}
-
-        <button
-          className="profile-nav-item"
-          onClick={handleSearch}
-        >
-          <FiSearch />
-
-          <span>
-            Search
-          </span>
-
-        </button>
-
-
-        {/* HISTORY */}
-
-        <button
-          className="profile-nav-item"
-          onClick={handleHistory}
-        >
-          <FiClock />
-
-          <span>
-            History
-          </span>
-
-        </button>
-
-      </nav>
-
-    </div>
+            return (
+              <button
+                type="button"
+                key={path}
+                className={`profile-nav-item ${active ? "active" : ""}`}
+                aria-current={active ? "page" : undefined}
+                onClick={() => {
+                  if (location.pathname !== path) {
+                    navigate(path);
+                  }
+                }}
+              >
+                <span className="profile-nav-icon">
+                  <Icon />
+                </span>
+                <span>{label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+    </>
   );
 }
-
-export default UserProfile;

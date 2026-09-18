@@ -1,24 +1,12 @@
 const express = require("express");
-
 const {
   getUserHistory,
 } = require("../controllers/history.controller");
 
-const authMiddleware = require("../middleware/authMiddleware");
-
 const router = express.Router();
 
-
-// =====================================================
-// SERVICE HISTORY
-// =====================================================
-
-// All history for logged-in user
-router.get(
-  "/",
-  authMiddleware,
-  getUserHistory
-);
-
+// No token middleware is used for this route.
+// The frontend sends the current user ID as a query parameter.
+router.get("/", getUserHistory);
 
 module.exports = router;
