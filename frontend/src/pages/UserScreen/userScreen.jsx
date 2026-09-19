@@ -94,16 +94,26 @@ const VendorImage = ({ vendor, className }) => {
 
   return (
     <img
+      key={imageUrl}
       src={imageUrl}
       alt={vendor.name}
       className={className}
-      loading="lazy"
-      onError={() => setFailed(true)}
+      loading={className === "featured-image" ? "eager" : "lazy"}
+      decoding="async"
+      onLoad={() => setFailed(false)}
+      onError={() => {
+        console.error("Vendor image failed:", {
+          vendorId: vendor.id,
+          vendorName: vendor.name,
+          imageUrl,
+        });
+        setFailed(true);
+      }}
     />
   );
 };
 
-export default function UserScreen() {
+export default function userScreen() {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -147,7 +157,10 @@ export default function UserScreen() {
         serviceType: vendor.serviceType ?? vendor.service_type ?? "Local services",
         isPremium: Boolean(vendor.isPremium ?? vendor.is_premium),
         isVerified: Boolean(vendor.isVerified ?? vendor.is_verified),
-        imageUrl: vendor.imageUrl ?? vendor.image_url ?? null,
+        imageUrl:
+          vendor.imageUrl ??
+          vendor.image_url ??
+          (vendor.id ? `/api/images/vendors/${vendor.id}/main` : null),
       })),
     [vendors]
   );
