@@ -12,7 +12,7 @@ import VerifyOtp from "./components/VerifyOtp";
 import ForgotPassword from "./components/ForgotPassword";
 import ResetPassword from "./components/ResetPassword";
 
-import UserScreen from "./pages/UserScreen/UserScreen.jsx";
+import UserScreen from "./pages/UserScreen/userScreen.jsx";
 import UserHistory from "./pages/userHistory/userHistory.jsx";
 import UserProfile from "./pages/userProfile/UserProfile.jsx";
 import HelpSupport from "./pages/HelpSupport/HelpSupport.jsx"
