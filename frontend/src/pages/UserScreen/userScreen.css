@@ -1024,3 +1024,124 @@ button {
   height: 100%;
 }
 
+/* =========================================================
+   REAL MOBILE BROWSER FIX
+   Append this block at the END of userScreen.css.
+   ========================================================= */
+
+/* Keep mobile browsers from applying automatic dark styling. */
+html,
+body,
+#root,
+.app-container {
+  color-scheme: light only;
+  forced-color-adjust: none;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Prevent browser default input styling from creating a dark rectangle. */
+.search-box {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  isolation: isolate;
+  background-color: #ffffff !important;
+  color: #153040 !important;
+  opacity: 1 !important;
+  -webkit-filter: none !important;
+  filter: none !important;
+}
+
+.search-box input,
+.search-box input[type="search"] {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 52px;
+  margin: 0;
+  padding: 0 10px;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: #153040 !important;
+  caret-color: #0c9b72 !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  -webkit-text-fill-color: #153040 !important;
+  -webkit-filter: none !important;
+  filter: none !important;
+}
+
+.search-box input::placeholder,
+.search-box input[type="search"]::placeholder {
+  color: #7d8c95 !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: #7d8c95 !important;
+}
+
+/* Chrome/WebView autofill can otherwise apply a dark or yellow layer. */
+.search-box input:-webkit-autofill,
+.search-box input:-webkit-autofill:hover,
+.search-box input:-webkit-autofill:focus,
+.search-box input:-webkit-autofill:active {
+  color: #153040 !important;
+  -webkit-text-fill-color: #153040 !important;
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  transition: background-color 9999s ease-out 0s;
+}
+
+/* Remove the native search decoration that differs across Android browsers. */
+.search-box input[type="search"]::-webkit-search-decoration,
+.search-box input[type="search"]::-webkit-search-cancel-button,
+.search-box input[type="search"]::-webkit-search-results-button,
+.search-box input[type="search"]::-webkit-search-results-decoration {
+  display: none;
+  -webkit-appearance: none;
+}
+
+.search-icon {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
+  color: #71818b !important;
+  opacity: 1 !important;
+}
+
+.search-submit {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 39px;
+  background: #0c9b72 !important;
+  color: #ffffff !important;
+  opacity: 1 !important;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Avoid horizontal squeezing on real devices with browser UI and safe areas. */
+@media (max-width: 480px) {
+  .hero-section {
+    padding-right: max(14px, env(safe-area-inset-right));
+    padding-left: max(14px, env(safe-area-inset-left));
+  }
+
+  .search-box {
+    min-height: 56px;
+    padding: 0 8px 0 14px;
+    border-radius: 16px;
+  }
+
+  .search-box input,
+  .search-box input[type="search"] {
+    font-size: 16px !important;
+  }
+}
+

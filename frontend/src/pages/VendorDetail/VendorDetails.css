@@ -527,3 +527,113 @@
     border-radius: 24px;
   }
 }
+
+/* =========================================================
+   REAL MOBILE BROWSER FIX
+   Append this block at the END of VendorDetails.css.
+   ========================================================= */
+
+html,
+body,
+#root,
+.vd-page {
+  color-scheme: light only;
+  forced-color-adjust: none;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Explicit colors prevent Android browser auto-darkening and inherited opacity. */
+.vd-card,
+.vd-section-title,
+.vd-section-title > div,
+.vd-section-title h2,
+.vd-section-title small {
+  opacity: 1 !important;
+  visibility: visible !important;
+  -webkit-filter: none !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+.vd-card {
+  background-color: #ffffff !important;
+  color: #0b2239 !important;
+  forced-color-adjust: none;
+}
+
+.vd-section-title h2 {
+  color: #0b2239 !important;
+  -webkit-text-fill-color: #0b2239 !important;
+  text-shadow: none !important;
+  font-weight: 750 !important;
+}
+
+.vd-section-title small {
+  color: #60758a !important;
+  -webkit-text-fill-color: #60758a !important;
+  text-shadow: none !important;
+}
+
+.vd-section-title > span {
+  color: #0c66e4 !important;
+  background-color: #eaf3ff !important;
+  opacity: 1 !important;
+}
+
+.vd-about > p,
+.vd-empty,
+.vd-info-row span,
+.vd-service p,
+.vd-highlights span {
+  opacity: 1 !important;
+  -webkit-text-fill-color: currentColor;
+}
+
+.vd-about > p {
+  color: #4d6073 !important;
+}
+
+.vd-empty,
+.vd-service p {
+  color: #5f7182 !important;
+}
+
+.vd-info-row strong,
+.vd-service h3,
+.vd-highlights strong {
+  color: #0b2239 !important;
+  -webkit-text-fill-color: #0b2239 !important;
+  opacity: 1 !important;
+}
+
+.vd-info-row span,
+.vd-highlights span {
+  color: #647589 !important;
+}
+
+/* Keep the fixed action bar readable above Android browser controls. */
+.vd-actionbar {
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  background-color: rgba(255, 255, 255, 0.98) !important;
+}
+
+@media (max-width: 480px) {
+  .vd-content {
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-left: max(12px, env(safe-area-inset-left));
+  }
+
+  .vd-card {
+    padding: 18px 16px;
+  }
+
+  .vd-section-title {
+    align-items: center;
+  }
+
+  .vd-section-title h2 {
+    font-size: 17px !important;
+    line-height: 1.25 !important;
+  }
+}
