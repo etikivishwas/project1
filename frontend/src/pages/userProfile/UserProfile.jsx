@@ -54,7 +54,22 @@ const footerItems = [
 ];
 
 const getStoredToken = () =>
-  localStorage.getItem("token") || sessionStorage.getItem("token");
+  localStorage.getItem(
+    "accessToken"
+  ) ||
+  localStorage.getItem(
+    "token"
+  ) ||
+  localStorage.getItem(
+    "authToken"
+  ) ||
+  sessionStorage.getItem(
+    "accessToken"
+  ) ||
+  sessionStorage.getItem(
+    "token"
+  ) ||
+  "";
 
 const getStoredUser = () => {
   const value =
@@ -151,11 +166,40 @@ export default function UserProfile() {
   }, [fetchCurrentUser]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("user");
-    navigate("/login", { replace: true });
+    localStorage.removeItem(
+      "accessToken"
+    );
+
+    localStorage.removeItem(
+      "token"
+    );
+
+    localStorage.removeItem(
+      "authToken"
+    );
+
+    localStorage.removeItem(
+      "user"
+    );
+
+    sessionStorage.removeItem(
+      "accessToken"
+    );
+
+    sessionStorage.removeItem(
+      "token"
+    );
+
+    sessionStorage.removeItem(
+      "user"
+    );
+
+    navigate(
+      "/login",
+      {
+        replace: true,
+      }
+    );
   };
 
   const isFooterActive = (path) => {
@@ -321,7 +365,7 @@ export default function UserProfile() {
             </div>
           </section>
 
-          <section className="vendor-cta">
+          {/* <section className="vendor-cta">
             <span className="vendor-cta-icon">
               <FaStore />
             </span>
@@ -342,7 +386,7 @@ export default function UserProfile() {
             >
               Get started <FiChevronRight />
             </button>
-          </section>
+          </section> */}
 
           <button type="button" className="logout-button" onClick={handleLogout}>
             <FiLogOut />

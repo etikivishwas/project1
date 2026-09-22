@@ -206,9 +206,8 @@ export default function UserHistory() {
               <button
                 type="button"
                 key={filter.value}
-                className={`history-filter ${
-                  activeFilter === filter.value ? "active" : ""
-                }`}
+                className={`history-filter ${activeFilter === filter.value ? "active" : ""
+                  }`}
                 onClick={() => setActiveFilter(filter.value)}
               >
                 {filter.label}
@@ -321,30 +320,47 @@ export default function UserHistory() {
       </div>
 
       <div className="history-bottom-viewport">
-        <nav className="history-bottom-navigation" aria-label="Primary navigation">
-          {footerItems.map(({ label, path, icon: Icon }) => {
-            const active = isFooterActive(path);
+        <nav
+          className="history-bottom-navigation"
+          aria-label="Primary navigation"
+        >
+          {footerItems.map(
+            ({ label, path, icon: Icon }) => {
+              const active =
+                isFooterActive(path);
 
-            return (
-              <button
-                type="button"
-                key={path}
-                className={`history-nav-item ${active ? "active" : ""}`}
-                aria-label={label}
-                aria-current={active ? "page" : undefined}
-                onClick={() => {
-                  if (location.pathname !== path) {
-                    navigate(path);
+              return (
+                <button
+                  type="button"
+                  key={path}
+                  className={`history-nav-item ${active ? "active" : ""
+                    }`}
+                  aria-label={label}
+                  aria-current={
+                    active
+                      ? "page"
+                      : undefined
                   }
-                }}
-              >
-                <span className="history-nav-icon">
-                  <Icon />
-                </span>
-                <span>{label}</span>
-              </button>
-            );
-          })}
+                  onClick={() => {
+                    if (
+                      location.pathname !==
+                      path
+                    ) {
+                      navigate(path);
+                    }
+                  }}
+                >
+                  <span className="history-nav-icon">
+                    <Icon />
+                  </span>
+
+                  <span className="history-nav-label">
+                    {label}
+                  </span>
+                </button>
+              );
+            }
+          )}
         </nav>
       </div>
     </>

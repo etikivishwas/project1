@@ -3,10 +3,10 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   FiArrowLeft,
   FiBriefcase,
-  FiCalendar,
   FiCheckCircle,
   FiClock,
   FiImage,
+  FiInfo,
   FiMapPin,
   FiMessageCircle,
   FiPhone,
@@ -16,9 +16,12 @@ import {
   FiStar,
   FiX,
 } from "react-icons/fi";
+import VendorExperiencePopup from "./VendorExperiencePopup";
 import "./VendorDetails.css";
 
-const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/$/, "");
+const API_URL = (
+  import.meta.env.VITE_API_URL || "http://localhost:5000"
+).replace(/\/$/, "");
 
 const getImageUrl = (imagePath) => {
   if (typeof imagePath !== "string" || !imagePath.trim()) {
@@ -44,6 +47,7 @@ const readAccessToken = () =>
   localStorage.getItem("token") ||
   localStorage.getItem("authToken") ||
   sessionStorage.getItem("accessToken") ||
+  sessionStorage.getItem("token") ||
   "";
 
 const readResponseData = async (response) => {
@@ -91,6 +95,7 @@ export default function VendorDetails() {
   const [heroImageFailed, setHeroImageFailed] = useState(false);
   const [failedGalleryImages, setFailedGalleryImages] = useState({});
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [experiencePopupOpen, setExperiencePopupOpen] = useState(false);
   const [booking, setBooking] = useState({
     vendorServiceId: "",
     serviceDate: "",
@@ -107,16 +112,20 @@ export default function VendorDetails() {
       setHeroImageFailed(false);
       setFailedGalleryImages({});
 
-      const response = await fetch(`${API_URL}/api/vendor-directory/${vendorId}`, {
-        method: "GET",
-        headers: { Accept: "application/json" },
-      });
+      const response = await fetch(
+        `${API_URL}/api/vendor-directory/${vendorId}`,
+        {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        }
+      );
 
       const result = await readResponseData(response);
 
       if (!response.ok || !result.success) {
         throw new Error(
-          result.message || `Vendor could not be loaded. Server returned status ${response.status}.`
+          result.message ||
+            `Vendor could not be loaded. Server returned status ${response.status}.`
         );
       }
 
@@ -131,7 +140,9 @@ export default function VendorDetails() {
           result.data.image_url ??
           vendorPreview?.imageUrl ??
           vendorPreview?.image_url ??
-          null,
+          (result.data.id || vendorId
+            ? `/api/images/vendors/${result.data.id || vendorId}/main`
+            : null),
         serviceType:
           result.data.serviceType ??
           result.data.service_type ??
@@ -141,15 +152,15 @@ export default function VendorDetails() {
           "Local services",
         isVerified: Boolean(
           result.data.isVerified ??
-          result.data.is_verified ??
-          vendorPreview?.isVerified ??
-          vendorPreview?.is_verified
+            result.data.is_verified ??
+            vendorPreview?.isVerified ??
+            vendorPreview?.is_verified
         ),
         isPremium: Boolean(
           result.data.isPremium ??
-          result.data.is_premium ??
-          vendorPreview?.isPremium ??
-          vendorPreview?.is_premium
+            result.data.is_premium ??
+            vendorPreview?.isPremium ??
+            vendorPreview?.is_premium
         ),
       };
 
@@ -169,6 +180,31 @@ export default function VendorDetails() {
   useEffect(() => {
     setHeroImageFailed(false);
   }, [vendor?.imageUrl]);
+
+  useEffect(() => {
+    const resolvedVendorId = vendor?.id || vendorId;
+
+    if (!resolvedVendorId || loading || error) {
+      return undefined;
+    }
+
+    const storageKey = `vendor-experience-popup:${resolvedVendorId}`;
+    const alreadySubmitted =
+      localStorage.getItem(storageKey) === "submitted";
+    const alreadyHandledThisSession = Boolean(
+      sessionStorage.getItem(storageKey)
+    );
+
+    if (alreadySubmitted || alreadyHandledThisSession) {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      setExperiencePopupOpen(true);
+    }, 700);
+
+    return () => window.clearTimeout(timer);
+  }, [vendor?.id, vendorId, loading, error]);
 
   useEffect(() => {
     if (!bookingOpen) {
@@ -199,7 +235,11 @@ export default function VendorDetails() {
     () =>
       vendorServices.filter((service) => {
         const numericServiceId = Number(service.id);
-        return Number.isInteger(numericServiceId) && numericServiceId > 0 && !service.synthetic;
+        return (
+          Number.isInteger(numericServiceId) &&
+          numericServiceId > 0 &&
+          !service.synthetic
+        );
       }),
     [vendorServices]
   );
@@ -212,7 +252,10 @@ export default function VendorDetails() {
     [bookableServices, booking.vendorServiceId]
   );
 
-  const heroImageUrl = useMemo(() => getImageUrl(vendor?.imageUrl), [vendor?.imageUrl]);
+  const heroImageUrl = useMemo(
+    () => getImageUrl(vendor?.imageUrl),
+    [vendor?.imageUrl]
+  );
 
   const gallery = useMemo(() => {
     if (!Array.isArray(vendor?.gallery)) {
@@ -222,13 +265,16 @@ export default function VendorDetails() {
     const uniqueImages = new Map();
 
     vendor.gallery.forEach((galleryItem) => {
-      const completeImageUrl = getImageUrl(galleryItem?.imageUrl);
+      const completeImageUrl = getImageUrl(
+        galleryItem?.imageUrl ?? galleryItem?.image_url
+      );
 
       if (!completeImageUrl) {
         return;
       }
 
       const key = String(galleryItem.id || completeImageUrl);
+
       uniqueImages.set(key, {
         id: key,
         imageUrl: completeImageUrl,
@@ -236,10 +282,14 @@ export default function VendorDetails() {
       });
     });
 
-    return Array.from(uniqueImages.values()).slice(0, 6);
+    return Array.from(uniqueImages.values()).slice(0, 4);
   }, [vendor?.gallery]);
 
-  const vendorInitial = useMemo(() => getVendorInitial(vendor?.name), [vendor?.name]);
+  const vendorInitial = useMemo(
+    () => getVendorInitial(vendor?.name),
+    [vendor?.name]
+  );
+
   const minimumBookingDate = useMemo(() => getTodayValue(), []);
 
   const openBooking = (serviceId = "") => {
@@ -316,6 +366,7 @@ export default function VendorDetails() {
         {
           method: "POST",
           headers: {
+            Accept: "application/json",
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
@@ -335,7 +386,9 @@ export default function VendorDetails() {
         );
       }
 
-      setBookingSuccess(result.message || "Booking request sent successfully.");
+      setBookingSuccess(
+        result.message || "Booking request sent successfully."
+      );
       setBooking({ vendorServiceId: "", serviceDate: "", notes: "" });
     } catch (requestError) {
       console.error("Booking request error:", requestError);
@@ -354,17 +407,18 @@ export default function VendorDetails() {
   };
 
   const whatsappVendor = () => {
-    const normalizedNumber = String(vendor?.whatsapp || vendor?.phone || "").replace(
-      /\D/g,
-      ""
-    );
+    const normalizedNumber = String(
+      vendor?.whatsapp || vendor?.phone || ""
+    ).replace(/\D/g, "");
 
     if (!normalizedNumber) {
       return;
     }
 
     const internationalNumber =
-      normalizedNumber.length === 10 ? `91${normalizedNumber}` : normalizedNumber;
+      normalizedNumber.length === 10
+        ? `91${normalizedNumber}`
+        : normalizedNumber;
 
     window.open(
       `https://wa.me/${internationalNumber}`,
@@ -375,8 +429,8 @@ export default function VendorDetails() {
 
   const shareVendor = async () => {
     const shareData = {
-      title: vendor?.name || "Milieu Global vendor",
-      text: `View ${vendor?.name || "this provider"} on Milieu Global`,
+      title: vendor?.name || "Tezo Bizz vendor",
+      text: `View ${vendor?.name || "this provider"} on Tezo Bizz`,
       url: window.location.href,
     };
 
@@ -437,7 +491,7 @@ export default function VendorDetails() {
         <button type="button" onClick={() => navigate(-1)} aria-label="Go back">
           <FiArrowLeft />
         </button>
-        <strong>Milieu Global</strong>
+        <strong>Tezo Bizz</strong>
         <button type="button" onClick={shareVendor} aria-label="Share provider">
           <FiShare2 />
         </button>
@@ -447,9 +501,11 @@ export default function VendorDetails() {
         <section className="vd-hero">
           {heroImageUrl && !heroImageFailed ? (
             <img
+              key={heroImageUrl}
               className="vd-hero-image"
               src={heroImageUrl}
               alt={vendor.name}
+              onLoad={() => setHeroImageFailed(false)}
               onError={() => setHeroImageFailed(true)}
             />
           ) : (
@@ -463,67 +519,40 @@ export default function VendorDetails() {
           <div className="vd-hero-content">
             <div className="vd-badges">
               {vendor.isVerified && (
-                <span>
+                <span className="verified">
                   <FiCheckCircle /> Verified
                 </span>
               )}
-              {vendor.isPremium && (
-                <span className="premium">
-                  <FiShield /> Premium
-                </span>
+              {vendor.distanceLabel && (
+                <span className="distance">{vendor.distanceLabel}</span>
               )}
             </div>
 
             <h1>{vendor.name}</h1>
-            <p>{vendor.serviceType || vendor.categoryName || "Local services"}</p>
 
-            <div className="vd-quick-stats">
-              <span>
-                <FiStar /> {Number(vendor.rating || 0).toFixed(1)}
-              </span>
-              <span>{Number(vendor.reviewCount || 0)} reviews</span>
-              <span>
-                <FiMapPin /> {vendor.city || "Nearby"}
-              </span>
+            <div className="vd-rating-line">
+              <FiStar />
+              <strong>{Number(vendor.rating || 0).toFixed(1)}</strong>
+              <span>({Number(vendor.reviewCount || 0)} reviews)</span>
             </div>
           </div>
         </section>
 
         <section className="vd-card vd-about">
-          <div className="vd-section-title">
-            <span><FiBriefcase /></span>
-            <div>
-              <small>ABOUT</small>
-              <h2>Trusted local expertise</h2>
-            </div>
+          <div className="vd-card-heading">
+            <FiInfo />
+            <h2>About</h2>
           </div>
           <p>
             {vendor.description ||
-              "Professional local services delivered with care and reliability."}
+              "Professional local services delivered with care, safety, and reliability."}
           </p>
-          <div className="vd-highlights">
-            <div>
-              <strong>{vendor.experienceLabel || "Experienced"}</strong>
-              <span>Business experience</span>
-            </div>
-            <div>
-              <strong>{Number(vendor.completedBookings || 0)}+</strong>
-              <span>Completed tasks</span>
-            </div>
-            <div>
-              <strong>{vendor.responseLabel || "Quick"}</strong>
-              <span>Response</span>
-            </div>
-          </div>
         </section>
 
         <section className="vd-card">
-          <div className="vd-section-title">
-            <span><FiBriefcase /></span>
-            <div>
-              <small>SERVICES</small>
-              <h2>Services and pricing</h2>
-            </div>
+          <div className="vd-card-heading">
+            <FiBriefcase />
+            <h2>Services &amp; Pricing</h2>
           </div>
 
           <div className="vd-services">
@@ -531,28 +560,29 @@ export default function VendorDetails() {
               vendorServices.map((service, index) => {
                 const numericId = Number(service.id);
                 const isBookable =
-                  Number.isInteger(numericId) && numericId > 0 && !service.synthetic;
+                  Number.isInteger(numericId) &&
+                  numericId > 0 &&
+                  !service.synthetic;
 
                 return (
-                  <article className="vd-service" key={service.id || `${service.name}-${index}`}>
-                    <div>
-                      <h3>{service.name}</h3>
-                      <p>
+                  <button
+                    type="button"
+                    className="vd-service"
+                    key={service.id || `${service.name}-${index}`}
+                    disabled={!isBookable}
+                    onClick={() => isBookable && openBooking(service.id)}
+                  >
+                    <span className="vd-service-copy">
+                      <strong>{service.name}</strong>
+                      <small>
                         {service.description ||
                           "Professional service offered by this provider."}
-                      </p>
-                    </div>
-                    <div className="vd-service-side">
-                      <strong>{service.priceLabel || "Get quote"}</strong>
-                      <button
-                        type="button"
-                        disabled={!isBookable}
-                        onClick={() => openBooking(service.id)}
-                      >
-                        {isBookable ? "Book" : "Contact"}
-                      </button>
-                    </div>
-                  </article>
+                      </small>
+                    </span>
+                    <span className="vd-service-price">
+                      {service.priceLabel || "Get quote"}
+                    </span>
+                  </button>
                 );
               })
             ) : (
@@ -561,16 +591,19 @@ export default function VendorDetails() {
               </p>
             )}
           </div>
+
+          {bookableServices.length > 0 && (
+            <p className="vd-service-hint">
+              Select a service row to send a booking request.
+            </p>
+          )}
         </section>
 
         {gallery.length > 0 && (
           <section className="vd-card">
-            <div className="vd-section-title">
-              <span><FiImage /></span>
-              <div>
-                <small>GALLERY</small>
-                <h2>Recent work</h2>
-              </div>
+            <div className="vd-card-heading">
+              <FiImage />
+              <h2>Work Gallery</h2>
             </div>
 
             <div className="vd-gallery">
@@ -613,24 +646,23 @@ export default function VendorDetails() {
         )}
 
         <section className="vd-card vd-info">
-          <div className="vd-section-title">
-            <span><FiClock /></span>
-            <div>
-              <small>BUSINESS INFO</small>
-              <h2>Plan your visit</h2>
-            </div>
+          <div className="vd-card-heading">
+            <FiBriefcase />
+            <h2>Business Info</h2>
           </div>
+
           <div className="vd-info-row">
             <FiClock />
             <div>
-              <strong>Business hours</strong>
+              <strong>Business Hours</strong>
               <span>{vendor.businessHours || "Contact provider for availability"}</span>
             </div>
           </div>
+
           <div className="vd-info-row">
             <FiMapPin />
             <div>
-              <strong>Service area</strong>
+              <strong>Service Area</strong>
               <span>
                 {vendor.fullAddress ||
                   vendor.city ||
@@ -638,28 +670,31 @@ export default function VendorDetails() {
               </span>
             </div>
           </div>
-          <div className="vd-info-row">
-            <FiShield />
+
+          <div className="vd-verification-card">
+            <span className="vd-shield">
+              <FiShield />
+            </span>
             <div>
-              <strong>Milieu quality status</strong>
-              <span>
+              <strong>
+                {vendor.isVerified ? "Tezo Verified Provider" : "Verification Pending"}
+              </strong>
+              <small>
                 {vendor.isVerified
-                  ? "Identity and business details verified"
-                  : "Verification in progress"}
-              </span>
+                  ? "Identity, background, and business details verified"
+                  : "Provider verification is currently in progress"}
+              </small>
             </div>
           </div>
         </section>
 
         {Array.isArray(vendor.reviews) && vendor.reviews.length > 0 && (
           <section className="vd-card">
-            <div className="vd-section-title">
-              <span><FiStar /></span>
-              <div>
-                <small>REVIEWS</small>
-                <h2>What customers say</h2>
-              </div>
+            <div className="vd-card-heading">
+              <FiStar />
+              <h2>Customer Reviews</h2>
             </div>
+
             <div className="vd-reviews">
               {vendor.reviews.map((review, index) => (
                 <article key={review.id || index}>
@@ -679,23 +714,18 @@ export default function VendorDetails() {
 
       <div className="vd-actionbar">
         <button type="button" className="call" onClick={callVendor} disabled={!hasPhone}>
-          <FiPhone /> <span>Call</span>
+          <FiPhone />
+          <span>Call Now</span>
         </button>
+
         <button
           type="button"
           className="whatsapp"
           onClick={whatsappVendor}
           disabled={!hasWhatsApp}
         >
-          <FiMessageCircle /> <span>WhatsApp</span>
-        </button>
-        <button
-          type="button"
-          className="book"
-          disabled={bookableServices.length === 0}
-          onClick={() => openBooking()}
-        >
-          <FiCalendar /> <span>Book service</span>
+          <FiMessageCircle />
+          <span>WhatsApp</span>
         </button>
       </div>
 
@@ -788,6 +818,13 @@ export default function VendorDetails() {
           </section>
         </div>
       )}
+
+      <VendorExperiencePopup
+        vendorId={vendor.id || vendorId}
+        vendorName={vendor.name}
+        open={experiencePopupOpen}
+        onClose={() => setExperiencePopupOpen(false)}
+      />
     </div>
   );
 }

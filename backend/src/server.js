@@ -11,6 +11,15 @@ const vendorCategoryRoutes = require("./routes/vendorCategoryRoutes.js");
 const vendorPublicRoutes = require("./routes/vendorPublicRoutes.js");
 const vendorImageRoutes = require("./routes/vendorImageRoutes.js");
 const uploadErrorHandler = require("./middleware/uploadErrorHandler.js");
+const verifyToken = require("./middleware/authMiddleware.js");
+const userSettingsRoutes =
+  require(
+    "./routes/userSettingsRoutes"
+  );
+const vendorReviewRoutes =
+  require(
+    "./routes/vendorReviewRoutes"
+  );
 
 const app = express();
 
@@ -52,6 +61,17 @@ app.use("/api/vendor-categories", vendorCategoryRoutes);
 app.use("/api/history", historyRoutes);
 app.use("/api/vendor-directory", vendorPublicRoutes);
 app.use("/api/images", vendorImageRoutes);
+app.use(
+  "/api/user",
+  verifyToken,
+  userSettingsRoutes
+);
+
+app.use(
+  "/api/vendor-directory",
+  verifyToken,
+  vendorReviewRoutes
+);
 
 app.use((req, res) =>
   res.status(404).json({

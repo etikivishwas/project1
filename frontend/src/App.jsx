@@ -12,7 +12,7 @@ import VerifyOtp from "./components/VerifyOtp";
 import ForgotPassword from "./components/ForgotPassword";
 import ResetPassword from "./components/ResetPassword";
 
-import UserScreen from "./pages/UserScreen/userScreen.jsx";
+import UserScreen from "./pages/UserScreen/UserScreen.jsx";
 import UserHistory from "./pages/userHistory/userHistory.jsx";
 import UserProfile from "./pages/userProfile/UserProfile.jsx";
 import HelpSupport from "./pages/HelpSupport/HelpSupport.jsx"
@@ -22,6 +22,9 @@ import VendorRegistrationPage2 from "./pages/VendorRegistrationPage2/VendorRegis
 import VendorRegistrationPage3 from "./pages/VendorRegistrationPage3/VendorRegistration.jsx";
 import VendorRegistrationSuccess from "./pages/VendorRegistrationSuccess/VendorRegistrationSuccess.jsx";
 import VendorDetails from "./pages/VendorDetail/VendorDetails.jsx"
+import UserSettings from "./pages/UserSettings/UserSettings.jsx";
+import ChangePassword from "./pages/UserSettings/ChangePassword.jsx";
+import TwoFactorAuthentication from "./pages/UserSettings/TwoFactorAuthentication";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import "./theme.css";
@@ -150,6 +153,26 @@ function App() {
             <ProtectedRoute>
               <VendorRegistrationSuccess />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/userSettings"
+          element={
+            <ProtectedRoute>
+              <UserSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/userSettings/changePassword"
+          element={
+            <ProtectedRoute><ChangePassword /></ProtectedRoute>
+          }
+        />
+        <Route
+          path="/userSettings/twoFactorAuthentication"
+          element={
+            <ProtectedRoute><TwoFactorAuthentication /></ProtectedRoute>
           }
         />
         <Route path="/vendor/:vendorId" element={<VendorDetails />} />

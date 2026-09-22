@@ -1,0 +1,129 @@
+.vep-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 22px;
+    background: rgba(39, 53, 68, .58);
+    backdrop-filter: blur(2px)
+}
+
+.vep-dialog {
+    position: relative;
+    width: min(100%, 344px);
+    padding: 28px 22px 20px;
+    text-align: center;
+    background: #fff;
+    border-radius: 13px;
+    box-shadow: 0 20px 55px rgba(7, 23, 43, .23)
+}
+
+.vep-dialog h2 {
+    margin: 0;
+    color: #24303d;
+    font-size: 16px;
+    font-weight: 500
+}
+
+.vep-dialog p {
+    margin: 10px 0 0;
+    color: #59626d;
+    font-size: 13px;
+    line-height: 1.5
+}
+
+.vep-close {
+    position: absolute;
+    top: 9px;
+    right: 9px;
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    background: transparent;
+    border: 0;
+    cursor: pointer
+}
+
+.vep-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 22px
+}
+
+.vep-actions button,
+.vep-submit {
+    height: 46px;
+    border: 1px solid #9199a2;
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer
+}
+
+.vep-actions .primary,
+.vep-submit {
+    color: #fff;
+    background: #06172b;
+    border-color: #06172b
+}
+
+.vep-submit {
+    width: 100%;
+    margin-top: 20px
+}
+
+.vep-submit:disabled {
+    opacity: .55
+}
+
+.vep-later {
+    width: 100%;
+    height: 42px;
+    color: #67717c;
+    background: transparent;
+    border: 0;
+    cursor: pointer
+}
+
+.vep-stars {
+    display: flex;
+    justify-content: center;
+    margin-top: 18px
+}
+
+.vep-stars button {
+    width: 38px;
+    height: 42px;
+    padding: 0;
+    color: #f1ad42;
+    font-size: 27px;
+    background: transparent;
+    border: 0;
+    cursor: pointer
+}
+
+.vep-stars button.selected svg {
+    fill: #f1ad42
+}
+
+.vep-error {
+    padding: 8px !important;
+    color: #b42318 !important;
+    background: #fff0f0;
+    border-radius: 7px
+}
+
+.vep-success {
+    width: 62px;
+    height: 62px;
+    margin: 0 auto 16px;
+    display: grid;
+    place-items: center;
+    color: #087f5b;
+    font-size: 27px;
+    background: #63f0ab;
+    border-radius: 50%
+}
