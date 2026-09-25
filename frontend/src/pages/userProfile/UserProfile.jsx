@@ -365,7 +365,7 @@ export default function UserProfile() {
             </div>
           </section>
 
-          {/* <section className="vendor-cta">
+          { <section className="vendor-cta">
             <span className="vendor-cta-icon">
               <FaStore />
             </span>
@@ -386,7 +386,7 @@ export default function UserProfile() {
             >
               Get started <FiChevronRight />
             </button>
-          </section> */}
+          </section> }
 
           <button type="button" className="logout-button" onClick={handleLogout}>
             <FiLogOut />

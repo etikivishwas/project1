@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   FiCheckCircle,
@@ -30,14 +30,14 @@ const API_URL = (
 ).replace(/\/$/, "");
 
 const categories = [
-  { id: 1, name: "Plumbing", icon: <FaWrench /> },
-  { id: 2, name: "Electrical", icon: <FaBolt /> },
-  { id: 3, name: "Cleaning", icon: <FaBroom /> },
-  { id: 4, name: "Beauty", icon: <FaSpa /> },
-  { id: 5, name: "Carpentry", icon: <FaPaintRoller /> },
-  { id: 6, name: "Moving", icon: <FaTruckMoving /> },
-  { id: 7, name: "HVAC", icon: <FaSnowflake /> },
-  { id: 8, name: "More", icon: <FiMoreHorizontal /> },
+  { id: 1, name: "Plumbing", image: "/icons/plumbing.png" },
+  { id: 2, name: "Electrical", image: "/icons/electrical.png" },
+  { id: 3, name: "Cleaning", image: "/icons/cleaning.png" },
+  { id: 4, name: "Beauty", image: "/icons/beauty.png" },
+  { id: 5, name: "Carpentry", image: "/icons/carpentry.png" },
+  { id: 6, name: "Moving", image: "/icons/moving.png" },
+  { id: 7, name: "HVAC", image: "/icons/hvac.png" },
+  { id: 8, name: "More", image: "/icons/more.png" },
 ];
 
 const footerItems = [
@@ -130,6 +130,8 @@ export default function UserScreen() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState(null);
+
+  const vendorsSectionRef = useRef(null);
 
   const fetchVendors = async () => {
     try {
@@ -237,15 +239,25 @@ export default function UserScreen() {
   };
 
   const handleCategoryClick = (category) => {
-    if (category.name === "More") {
-      navigate("/vendorSearch");
-      return;
-    }
+  if (category.name === "More") {
+    navigate("/vendorSearch");
+    return;
+  }
 
-    setActiveCategory((current) =>
-      current?.id === category.id ? null : category
-    );
-  };
+  const isSameCategory = activeCategory?.id === category.id;
+
+  setActiveCategory((current) =>
+    current?.id === category.id ? null : category
+  );
+
+  // Let React update the filter first, then move to the vendor section.
+  requestAnimationFrame(() => {
+    vendorsSectionRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  });
+};
 
   const handleSearch = (event) => {
     event.preventDefault();
@@ -300,14 +312,14 @@ export default function UserScreen() {
             type="button"
             className="brand"
             onClick={() => navigate("/userScreen")}
-            aria-label="Tezo Bizz home"
+            aria-label="Tedo Bizz home"
           >
             <span className="brand-logo">
               <img src={logo} alt="Tezo Bizz" />
             </span>
 
             <span className="brand-copy">
-              <strong>TEZO</strong>
+              <strong>TEDO</strong>
               <strong>BIZZ</strong>
             </span>
           </button>
@@ -401,7 +413,9 @@ export default function UserScreen() {
                   }`}
                   onClick={() => handleCategoryClick(category)}
                 >
-                  <span className="category-icon">{category.icon}</span>
+                  <span className="category-icon">
+  <img src={category.image} alt="" />
+</span>
                   <span className="category-label">{category.name}</span>
                 </button>
               ))}
@@ -433,7 +447,10 @@ export default function UserScreen() {
             </section>
           )}
 
-          <section className="home-section vendors-section">
+          <section
+  ref={vendorsSectionRef}
+  className="home-section vendors-section"
+>
             <div className="vendor-heading">
               <h2>Top Verified Vendors Near You</h2>
             </div>
@@ -511,7 +528,7 @@ export default function UserScreen() {
 
                     {vendor.isVerified && (
                       <span className="verified-label">
-                        <FiCheckCircle /> TEZO VERIFIED
+                        <FiCheckCircle /> TEDO VERIFIED
                       </span>
                     )}
 

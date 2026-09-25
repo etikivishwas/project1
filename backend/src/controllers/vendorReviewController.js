@@ -2,7 +2,11 @@ const db = require("../config/database");
 
 const submitVendorReview = async (req, res) => {
   const vendorId = Number(req.params.vendorId);
-  const userId = Number(req.currentUserId);
+  const userId = Number(req.userId);
+  const reviewText =
+  typeof req.body.reviewText === "string"
+    ? req.body.reviewText.trim()
+    : null;
   const rating = Number(req.body.rating);
   const bookedWithProvider = req.body.bookedWithProvider === true;
 
@@ -33,6 +37,13 @@ const submitVendorReview = async (req, res) => {
       message: "Rating must be an integer from 1 to 5.",
     });
   }
+
+  if (reviewText && reviewText.length > 1000) {
+  return res.status(400).json({
+    success: false,
+    message: "Review must be 1000 characters or less.",
+  });
+}
 
   const connection = await db.getConnection();
 
@@ -89,31 +100,26 @@ const submitVendorReview = async (req, res) => {
     const completedBooking = completedBookings[0] || null;
 
     await connection.query(
-      `INSERT INTO vendor_panel_reviews
-        (
-          vendor_id,
-          user_id,
-          service_history_id,
-          customer_name,
-          rating,
-          review_text,
-          status
-        )
-       VALUES (?, ?, ?, ?, ?, NULL, 'published')
-       ON DUPLICATE KEY UPDATE
-         service_history_id = VALUES(service_history_id),
-         customer_name = VALUES(customer_name),
-         rating = VALUES(rating),
-         status = 'published',
-         updated_at = CURRENT_TIMESTAMP`,
-      [
-        vendorId,
-        userId,
-        completedBooking?.id || null,
-        users[0].name || "Customer",
-        rating,
-      ]
-    );
+  `INSERT INTO vendor_panel_reviews
+    (
+      vendor_id,
+      user_id,
+      service_history_id,
+      customer_name,
+      rating,
+      review_text,
+      status
+    )
+   VALUES (?, ?, ?, ?, ?, ?, 'published')`,
+  [
+    vendorId,
+    userId,
+    completedBooking?.id || null,
+    users[0].name || "Customer",
+    rating,
+    reviewText || null,
+  ]
+);
 
     const [summaryRows] = await connection.query(
       `SELECT

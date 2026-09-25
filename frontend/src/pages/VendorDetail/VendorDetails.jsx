@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   FiArrowLeft,
@@ -96,14 +102,37 @@ export default function VendorDetails() {
   const [failedGalleryImages, setFailedGalleryImages] = useState({});
   const [bookingOpen, setBookingOpen] = useState(false);
   const [experiencePopupOpen, setExperiencePopupOpen] = useState(false);
+
+  const experiencePopupTimerRef = useRef(null);
+  // add near your other helpers
+const pendingKey = (id) => `vep_pending_${id}`;
+
+const isPending = (id) => Boolean(localStorage.getItem(pendingKey(id)));
+const markPending = (id) => localStorage.setItem(pendingKey(id), String(Date.now()));
+const clearPending = (id) => localStorage.removeItem(pendingKey(id));
+
   const [booking, setBooking] = useState({
     vendorServiceId: "",
     serviceDate: "",
     notes: "",
   });
+
   const [bookingError, setBookingError] = useState("");
   const [bookingSuccess, setBookingSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+ const scheduleExperiencePopup = useCallback(() => {
+  markPending(vendorId);
+
+  if (experiencePopupTimerRef.current) {
+    window.clearTimeout(experiencePopupTimerRef.current);
+  }
+
+  experiencePopupTimerRef.current = window.setTimeout(() => {
+    setExperiencePopupOpen(true);
+    experiencePopupTimerRef.current = null;
+  }, 5000);
+}, [vendorId]);
 
   const loadVendor = useCallback(async () => {
     try {
@@ -178,33 +207,24 @@ export default function VendorDetails() {
   }, [loadVendor]);
 
   useEffect(() => {
+  if (!vendor) return;
+  const id = vendor.id || vendorId;
+  if (isPending(id)) {
+    setExperiencePopupOpen(true);
+  }
+}, [vendor, vendorId]);
+
+  useEffect(() => {
     setHeroImageFailed(false);
   }, [vendor?.imageUrl]);
 
   useEffect(() => {
-    const resolvedVendorId = vendor?.id || vendorId;
-
-    if (!resolvedVendorId || loading || error) {
-      return undefined;
-    }
-
-    const storageKey = `vendor-experience-popup:${resolvedVendorId}`;
-    const alreadySubmitted =
-      localStorage.getItem(storageKey) === "submitted";
-    const alreadyHandledThisSession = Boolean(
-      sessionStorage.getItem(storageKey)
-    );
-
-    if (alreadySubmitted || alreadyHandledThisSession) {
-      return undefined;
-    }
-
-    const timer = window.setTimeout(() => {
-      setExperiencePopupOpen(true);
-    }, 700);
-
-    return () => window.clearTimeout(timer);
-  }, [vendor?.id, vendorId, loading, error]);
+    return () => {
+      if (experiencePopupTimerRef.current) {
+        window.clearTimeout(experiencePopupTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!bookingOpen) {
@@ -401,9 +421,13 @@ export default function VendorDetails() {
   const callVendor = () => {
     const phoneNumber = String(vendor?.phone || "").trim();
 
-    if (phoneNumber) {
-      window.location.href = `tel:${phoneNumber}`;
+    if (!phoneNumber) {
+      return;
     }
+
+    scheduleExperiencePopup();
+
+    window.location.href = `tel:${phoneNumber}`;
   };
 
   const whatsappVendor = () => {
@@ -419,6 +443,8 @@ export default function VendorDetails() {
       normalizedNumber.length === 10
         ? `91${normalizedNumber}`
         : normalizedNumber;
+
+    scheduleExperiencePopup();
 
     window.open(
       `https://wa.me/${internationalNumber}`,
@@ -481,6 +507,7 @@ export default function VendorDetails() {
   }
 
   const hasPhone = Boolean(String(vendor.phone || "").trim());
+
   const hasWhatsApp = Boolean(
     String(vendor.whatsapp || vendor.phone || "").replace(/\D/g, "")
   );
@@ -488,11 +515,21 @@ export default function VendorDetails() {
   return (
     <div className="vd-page">
       <header className="vd-topbar">
-        <button type="button" onClick={() => navigate(-1)} aria-label="Go back">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          aria-label="Go back"
+        >
           <FiArrowLeft />
         </button>
+
         <strong>Tezo Bizz</strong>
-        <button type="button" onClick={shareVendor} aria-label="Share provider">
+
+        <button
+          type="button"
+          onClick={shareVendor}
+          aria-label="Share provider"
+        >
           <FiShare2 />
         </button>
       </header>
@@ -523,6 +560,7 @@ export default function VendorDetails() {
                   <FiCheckCircle /> Verified
                 </span>
               )}
+
               {vendor.distanceLabel && (
                 <span className="distance">{vendor.distanceLabel}</span>
               )}
@@ -533,7 +571,9 @@ export default function VendorDetails() {
             <div className="vd-rating-line">
               <FiStar />
               <strong>{Number(vendor.rating || 0).toFixed(1)}</strong>
-              <span>({Number(vendor.reviewCount || 0)} reviews)</span>
+              <span>
+                ({Number(vendor.reviewCount || 0)} reviews)
+              </span>
             </div>
           </div>
         </section>
@@ -543,6 +583,7 @@ export default function VendorDetails() {
             <FiInfo />
             <h2>About</h2>
           </div>
+
           <p>
             {vendor.description ||
               "Professional local services delivered with care, safety, and reliability."}
@@ -559,6 +600,7 @@ export default function VendorDetails() {
             {vendorServices.length > 0 ? (
               vendorServices.map((service, index) => {
                 const numericId = Number(service.id);
+
                 const isBookable =
                   Number.isInteger(numericId) &&
                   numericId > 0 &&
@@ -570,15 +612,19 @@ export default function VendorDetails() {
                     className="vd-service"
                     key={service.id || `${service.name}-${index}`}
                     disabled={!isBookable}
-                    onClick={() => isBookable && openBooking(service.id)}
+                    onClick={() =>
+                      isBookable && openBooking(service.id)
+                    }
                   >
                     <span className="vd-service-copy">
                       <strong>{service.name}</strong>
+
                       <small>
                         {service.description ||
                           "Professional service offered by this provider."}
                       </small>
                     </span>
+
                     <span className="vd-service-price">
                       {service.priceLabel || "Get quote"}
                     </span>
@@ -587,7 +633,8 @@ export default function VendorDetails() {
               })
             ) : (
               <p className="vd-empty">
-                No services are currently listed. Contact the provider for a custom quote.
+                No services are currently listed. Contact the provider for a
+                custom quote.
               </p>
             )}
           </div>
@@ -608,13 +655,17 @@ export default function VendorDetails() {
 
             <div className="vd-gallery">
               {gallery.map((galleryItem, index) => {
-                const imageFailed = failedGalleryImages[galleryItem.id];
+                const imageFailed =
+                  failedGalleryImages[galleryItem.id];
 
                 return (
                   <button
                     type="button"
                     key={galleryItem.id}
-                    aria-label={galleryItem.caption || `Open work image ${index + 1}`}
+                    aria-label={
+                      galleryItem.caption ||
+                      `Open work image ${index + 1}`
+                    }
                     onClick={() => {
                       if (!imageFailed) {
                         window.open(
@@ -628,9 +679,14 @@ export default function VendorDetails() {
                     {!imageFailed ? (
                       <img
                         src={galleryItem.imageUrl}
-                        alt={galleryItem.caption || `${vendor.name} work ${index + 1}`}
+                        alt={
+                          galleryItem.caption ||
+                          `${vendor.name} work ${index + 1}`
+                        }
                         loading="lazy"
-                        onError={() => markGalleryImageFailed(galleryItem.id)}
+                        onError={() =>
+                          markGalleryImageFailed(galleryItem.id)
+                        }
                       />
                     ) : (
                       <span className="vd-gallery-placeholder">
@@ -655,7 +711,10 @@ export default function VendorDetails() {
             <FiClock />
             <div>
               <strong>Business Hours</strong>
-              <span>{vendor.businessHours || "Contact provider for availability"}</span>
+              <span>
+                {vendor.businessHours ||
+                  "Contact provider for availability"}
+              </span>
             </div>
           </div>
 
@@ -675,10 +734,14 @@ export default function VendorDetails() {
             <span className="vd-shield">
               <FiShield />
             </span>
+
             <div>
               <strong>
-                {vendor.isVerified ? "Tezo Verified Provider" : "Verification Pending"}
+                {vendor.isVerified
+                  ? "Tezo Verified Provider"
+                  : "Verification Pending"}
               </strong>
+
               <small>
                 {vendor.isVerified
                   ? "Identity, background, and business details verified"
@@ -688,32 +751,45 @@ export default function VendorDetails() {
           </div>
         </section>
 
-        {Array.isArray(vendor.reviews) && vendor.reviews.length > 0 && (
-          <section className="vd-card">
-            <div className="vd-card-heading">
-              <FiStar />
-              <h2>Customer Reviews</h2>
-            </div>
+        {Array.isArray(vendor.reviews) &&
+          vendor.reviews.length > 0 && (
+            <section className="vd-card">
+              <div className="vd-card-heading">
+                <FiStar />
+                <h2>Customer Reviews</h2>
+              </div>
 
-            <div className="vd-reviews">
-              {vendor.reviews.map((review, index) => (
-                <article key={review.id || index}>
-                  <div>
-                    <strong>{review.customerName || "Customer"}</strong>
-                    <span>
-                      <FiStar /> {Number(review.rating || 0).toFixed(1)}
-                    </span>
-                  </div>
-                  {review.reviewText && <p>{review.reviewText}</p>}
-                </article>
-              ))}
-            </div>
-          </section>
-        )}
+              <div className="vd-reviews">
+                {vendor.reviews.map((review, index) => (
+                  <article key={review.id || index}>
+                    <div>
+                      <strong>
+                        {review.customerName || "Customer"}
+                      </strong>
+
+                      <span>
+                        <FiStar />{" "}
+                        {Number(review.rating || 0).toFixed(1)}
+                      </span>
+                    </div>
+
+                    {review.reviewText && (
+                      <p>{review.reviewText}</p>
+                    )}
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
       </main>
 
       <div className="vd-actionbar">
-        <button type="button" className="call" onClick={callVendor} disabled={!hasPhone}>
+        <button
+          type="button"
+          className="call"
+          onClick={callVendor}
+          disabled={!hasPhone}
+        >
           <FiPhone />
           <span>Call Now</span>
         </button>
@@ -730,7 +806,10 @@ export default function VendorDetails() {
       </div>
 
       {bookingOpen && (
-        <div className="vd-modal-backdrop" onMouseDown={closeBooking}>
+        <div
+          className="vd-modal-backdrop"
+          onMouseDown={closeBooking}
+        >
           <section
             className="vd-modal"
             role="dialog"
@@ -743,7 +822,12 @@ export default function VendorDetails() {
                 <small>REQUEST A SERVICE</small>
                 <h2 id="booking-title">Book {vendor.name}</h2>
               </div>
-              <button type="button" onClick={closeBooking} aria-label="Close booking form">
+
+              <button
+                type="button"
+                onClick={closeBooking}
+                aria-label="Close booking form"
+              >
                 <FiX />
               </button>
             </div>
@@ -751,6 +835,7 @@ export default function VendorDetails() {
             <form onSubmit={submitBooking} noValidate>
               <label htmlFor="vendorServiceId">
                 Service
+
                 <select
                   id="vendorServiceId"
                   name="vendorServiceId"
@@ -758,9 +843,11 @@ export default function VendorDetails() {
                   onChange={handleBookingChange}
                 >
                   <option value="">Select a service</option>
+
                   {bookableServices.map((service) => (
                     <option key={service.id} value={service.id}>
-                      {service.name} - {service.priceLabel || "Get quote"}
+                      {service.name} -{" "}
+                      {service.priceLabel || "Get quote"}
                     </option>
                   ))}
                 </select>
@@ -768,6 +855,7 @@ export default function VendorDetails() {
 
               <label htmlFor="serviceDate">
                 Preferred date
+
                 <input
                   id="serviceDate"
                   name="serviceDate"
@@ -780,6 +868,7 @@ export default function VendorDetails() {
 
               <label htmlFor="bookingNotes">
                 Notes
+
                 <textarea
                   id="bookingNotes"
                   name="notes"
@@ -795,7 +884,9 @@ export default function VendorDetails() {
                 <div className="vd-booking-summary">
                   <span>Selected service</span>
                   <strong>{selectedService.name}</strong>
-                  <span>{selectedService.priceLabel || "Get quote"}</span>
+                  <span>
+                    {selectedService.priceLabel || "Get quote"}
+                  </span>
                 </div>
               )}
 
@@ -811,8 +902,14 @@ export default function VendorDetails() {
                 </p>
               )}
 
-              <button className="vd-confirm" type="submit" disabled={submitting}>
-                {submitting ? "Sending request..." : "Confirm booking request"}
+              <button
+                className="vd-confirm"
+                type="submit"
+                disabled={submitting}
+              >
+                {submitting
+                  ? "Sending request..."
+                  : "Confirm booking request"}
               </button>
             </form>
           </section>
@@ -820,11 +917,15 @@ export default function VendorDetails() {
       )}
 
       <VendorExperiencePopup
-        vendorId={vendor.id || vendorId}
-        vendorName={vendor.name}
-        open={experiencePopupOpen}
-        onClose={() => setExperiencePopupOpen(false)}
-      />
+  vendorId={vendor.id || vendorId}
+  vendorName={vendor.name}
+  open={experiencePopupOpen}
+  onClose={(reason) => {
+    const id = vendor.id || vendorId;
+    clearPending(id); // clear on submit, not-booked, AND later — always clear once handled
+    setExperiencePopupOpen(false);
+  }}
+/>
     </div>
   );
 }
