@@ -5,6 +5,7 @@ import {
   FiChevronDown,
   FiClock,
   FiHome,
+  FiInfo,
   FiMapPin,
   FiMessageSquare,
   FiPhone,
@@ -16,7 +17,7 @@ import {
 } from "react-icons/fi";
 import logo from "../../assets/logo.jpeg";
 import "./VendorSearch.css";
-
+import { FaWhatsapp } from "react-icons/fa";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const fallbackVendorImage =
@@ -90,7 +91,7 @@ export default function VendorSearch() {
   const [distanceFilter, setDistanceFilter] = useState("default");
   const [ratingFilter, setRatingFilter] = useState("default");
   const [userLocation, setUserLocation] = useState(null);
-
+  const [selectedVendor, setSelectedVendor] = useState(null);
   const fetchVendors = async () => {
     try {
       setLoading(true);
@@ -249,7 +250,16 @@ export default function VendorSearch() {
         : ratingA - ratingB;
     }
 
-    return Number(b.is_premium || 0) - Number(a.is_premium || 0);
+    if (distanceFilter === "default") {
+  const distanceA = a.distance ?? Infinity;
+  const distanceB = b.distance ?? Infinity;
+
+  if (distanceA !== distanceB) {
+    return distanceA - distanceB;
+  }
+}
+
+return Number(b.is_premium || 0) - Number(a.is_premium || 0);
   });
 }, [
   allVendors,
@@ -327,94 +337,102 @@ export default function VendorSearch() {
     <>
       <div className="vendor-search-page">
         <header className="vendor-search-header">
-          <button
-            type="button"
-            className="vendor-back-button"
-            onClick={() => navigate("/userScreen")}
-            aria-label="Go to home"
-          >
-            <FiArrowLeft />
-          </button>
+  <button
+    type="button"
+    className="vendor-back-button"
+    onClick={() => navigate("/userScreen")}
+    aria-label="Go to home"
+  >
+    <FiArrowLeft />
+  </button>
 
-          <div className="vendor-search-brand">
-            <img src={logo} alt="Milieu Global" />
-            <div>
-              <small>DISCOVER SERVICES</small>
-              <strong>Search Providers</strong>
-            </div>
-          </div>
+  <div className="vendor-search-brand">
+    <img src={logo} alt="Milieu Global" />
 
-          <button
-            type="button"
-            className={`filter-icon-button ${filtersOpen ? "active" : ""}`}
-            onClick={() => setFiltersOpen((current) => !current)}
-            aria-label="Toggle filters"
-            aria-expanded={filtersOpen}
-          >
-            <FiSliders />
-            {activeFilterCount > 0 && (
-              <span className="filter-count">{activeFilterCount}</span>
-            )}
-          </button>
-        </header>
+    <div>
+      <small>DISCOVER SERVICES</small>
+      <strong>Search Providers</strong>
+    </div>
+  </div>
+</header>
 
-        <section className="search-hero">
-          <div className="search-hero-copy">
-            <span>TRUSTED LOCAL PROFESSIONALS</span>
-            <h1>What service do you need?</h1>
-            <p>Search by service, provider name, city, or locality.</p>
-          </div>
+<section className="search-hero">
+  <div className="search-hero-copy">
+    <span>TRUSTED LOCAL PROFESSIONALS</span>
 
-          <form
-            className="vendor-search-bar-wrapper"
-            onSubmit={(event) => {
-              event.preventDefault();
-              handleSearch();
-            }}
-          >
-            <div className="vendor-search-input-container">
-              <FiSearch className="search-input-icon" />
-              <input
-                type="search"
-                value={searchText}
-                onChange={(event) => setSearchText(event.target.value)}
-                placeholder="Plumber, electrician, Hyderabad..."
-                className="vendor-search-input"
-                autoComplete="off"
-              />
+    <h1>What service do you need?</h1>
 
-              {searchText && (
-                <button
-                  type="button"
-                  className="clear-search-button"
-                  onClick={handleClearSearch}
-                  aria-label="Clear search"
-                >
-                  <FiX />
-                </button>
-              )}
-            </div>
+    <p>
+      Search by service, provider name, city, or locality.
+    </p>
+  </div>
 
-            <button type="submit" className="vendor-search-button">
-              <FiSearch />
-              <span>Search</span>
-            </button>
-          </form>
+  <form
+    className="vendor-search-bar-wrapper"
+    onSubmit={(event) => {
+      event.preventDefault();
+      handleSearch();
+    }}
+  >
+    <div className="vendor-search-input-container">
+  <FiSearch className="search-input-icon" />
 
-          {!hasSearched && (
-            <div className="quick-search-row">
-              {quickSearches.map((item) => (
-                <button
-                  type="button"
-                  key={item}
-                  onClick={() => handleSearch(item)}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-          )}
-        </section>
+  <input
+    type="text"
+    value={searchText}
+    onChange={(event) => setSearchText(event.target.value)}
+    placeholder="Plumber, electrician, Hyderabad..."
+    className="vendor-search-input"
+    autoComplete="off"
+  />
+
+  {searchText && (
+    <button
+      type="button"
+      className="clear-search-button"
+      onClick={handleClearSearch}
+      aria-label="Clear search"
+    >
+      <FiX />
+    </button>
+  )}
+</div>
+
+
+
+<button
+  type="button"
+  className={`filter-icon-button ${filtersOpen ? "active" : ""}`}
+  onClick={() => setFiltersOpen((current) => !current)}
+  aria-label="Toggle filters"
+  aria-expanded={filtersOpen}
+>
+  <FiSliders />
+
+  <span>Filter</span>
+
+  {activeFilterCount > 0 && (
+    <span className="filter-count">
+      {activeFilterCount}
+    </span>
+  )}
+</button>
+  </form>
+
+  {!hasSearched && (
+    <div className="quick-search-row">
+      {quickSearches.map((item) => (
+        <button
+          type="button"
+          key={item}
+          onClick={() => handleSearch(item)}
+        >
+          {item}
+        </button>
+      ))}
+    </div>
+  )}
+</section>
 
         <section className={`filter-panel ${filtersOpen ? "open" : ""}`}>
           <div className="filter-panel-heading">
@@ -586,12 +604,24 @@ export default function VendorSearch() {
 
                           <div className="vendor-main-info">
                             <div className="vendor-name-row">
-                              <h3>{vendor.name}</h3>
-                              <span className="vendor-rating">
-                                <FiStar />
-                                {Number(vendor.rating || 0).toFixed(1)}
-                              </span>
-                            </div>
+  <div className="vendor-name-with-info">
+    <h3>{vendor.name}</h3>
+
+    <button
+      type="button"
+      className="vendor-info-button"
+      onClick={() => setSelectedVendor(vendor)}
+      aria-label={`View details for ${vendor.name}`}
+    >
+      <FiInfo />
+    </button>
+  </div>
+
+  <span className="vendor-rating">
+    <FiStar />
+    {Number(vendor.rating || 0).toFixed(1)}
+  </span>
+</div>
 
                             <p className="vendor-service-type">
                               {vendor.service_type || "General Service"}
@@ -606,6 +636,11 @@ export default function VendorSearch() {
                                 <FiMapPin />
                                 {vendor.city || vendor.address || "Nearby"}
                               </span>
+                              {vendor.distance !== null && (
+    <span className="vendor-distance">
+      {vendor.distance.toFixed(1)} km away
+    </span>
+  )}
                             </div>
 
                             {startingPrice !== null && (
@@ -625,25 +660,29 @@ export default function VendorSearch() {
                             View details
                           </button>
 
-                          <button
-                            type="button"
-                            className="call-button"
-                            onClick={() => handleCall(vendor.phone)}
-                            disabled={!vendor.phone}
-                          >
-                            <FiPhone /> Call
-                          </button>
+                          <a
+  className={`call-button ${!vendor.phone ? "disabled" : ""}`}
+  href={vendor.phone ? `tel:${String(vendor.phone).trim()}` : undefined}
+  aria-disabled={!vendor.phone}
+  onClick={(event) => {
+    if (!vendor.phone) {
+      event.preventDefault();
+    }
+  }}
+>
+  <FiPhone /> Call
+</a>
 
                           <button
-                            type="button"
-                            className="whatsapp-button"
-                            onClick={() =>
-                              handleWhatsApp(vendor.whatsapp || vendor.phone)
-                            }
-                            disabled={!vendor.whatsapp && !vendor.phone}
-                          >
-                            <FiMessageSquare /> Chat
-                          </button>
+  type="button"
+  className="whatsapp-button"
+  onClick={() =>
+    handleWhatsApp(vendor.whatsapp || vendor.phone)
+  }
+  disabled={!vendor.whatsapp && !vendor.phone}
+>
+  <FaWhatsapp /> WhatsApp
+</button>
                         </div>
                       </article>
                     );
@@ -652,6 +691,121 @@ export default function VendorSearch() {
               </section>
             )}
         </main>
+
+        {selectedVendor && (
+  <div
+    className="vendor-info-overlay"
+    onClick={() => setSelectedVendor(null)}
+  >
+    <div
+      className="vendor-info-modal"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <button
+        type="button"
+        className="vendor-info-close"
+        onClick={() => setSelectedVendor(null)}
+        aria-label="Close vendor details"
+      >
+        <FiX />
+      </button>
+
+      <div className="vendor-info-modal-header">
+        <img
+          src={
+            selectedVendor.image_url ||
+            fallbackVendorImage
+          }
+          alt={selectedVendor.name || "Service provider"}
+        />
+
+        <div>
+          <h2>{selectedVendor.name}</h2>
+
+          <p>
+            {selectedVendor.service_type ||
+              "General Service"}
+          </p>
+        </div>
+      </div>
+
+      <div className="vendor-info-details">
+        <div className="vendor-info-item">
+          <span>Rating</span>
+          <strong>
+            ⭐ {Number(selectedVendor.rating || 0).toFixed(1)}
+          </strong>
+        </div>
+
+        {selectedVendor.city || selectedVendor.address ? (
+          <div className="vendor-info-item">
+            <span>Location</span>
+            <strong>
+              <FiMapPin />
+              {selectedVendor.city ||
+                selectedVendor.address}
+            </strong>
+          </div>
+        ) : null}
+
+        {selectedVendor.distance !== null &&
+        selectedVendor.distance !== undefined ? (
+          <div className="vendor-info-item">
+            <span>Distance</span>
+            <strong>
+              {selectedVendor.distance.toFixed(1)} km away
+            </strong>
+          </div>
+        ) : null}
+
+        {getStartingPrice(selectedVendor) !== null ? (
+          <div className="vendor-info-item">
+            <span>Starting price</span>
+            <strong>
+              {formatPrice(
+                getStartingPrice(selectedVendor)
+              )}
+            </strong>
+          </div>
+        ) : null}
+
+        {selectedVendor.is_verified ? (
+          <div className="vendor-info-item">
+            <span>Status</span>
+            <strong className="info-verified">
+              ✓ Verified
+            </strong>
+          </div>
+        ) : null}
+      </div>
+
+      {selectedVendor.description && (
+        <div className="vendor-info-description">
+          <span>About this provider</span>
+          <p>{selectedVendor.description}</p>
+        </div>
+      )}
+
+      {selectedVendor.subcategories && (
+        <div className="vendor-info-services">
+          <span>Services</span>
+
+          <div>
+            {(Array.isArray(selectedVendor.subcategories)
+              ? selectedVendor.subcategories
+              : String(selectedVendor.subcategories)
+                  .split("||")
+            ).map((service, index) => (
+              <span key={`${service}-${index}`}>
+                {service}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
       </div>
 
       <div className="search-bottom-viewport">

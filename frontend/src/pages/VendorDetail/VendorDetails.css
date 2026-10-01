@@ -508,7 +508,7 @@ body,
   transform: translateX(-50%);
 }
 
-.vd-actionbar button {
+.vd-actionbar a {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -525,13 +525,14 @@ body,
 
 .vd-actionbar .call {
   background: var(--vd-navy);
+  text-decoration: none;
 }
 
 .vd-actionbar .whatsapp {
   background: #058c54;
+  text-decoration: none;
 }
-
-.vd-actionbar button:disabled {
+.vd-actionbar .disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }

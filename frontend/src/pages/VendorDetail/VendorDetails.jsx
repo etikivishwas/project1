@@ -24,7 +24,7 @@ import {
 } from "react-icons/fi";
 import VendorExperiencePopup from "./VendorExperiencePopup";
 import "./VendorDetails.css";
-
+import { FaWhatsapp } from "react-icons/fa";
 const API_URL = (
   import.meta.env.VITE_API_URL || "http://localhost:5000"
 ).replace(/\/$/, "");
@@ -55,6 +55,26 @@ const readAccessToken = () =>
   sessionStorage.getItem("accessToken") ||
   sessionStorage.getItem("token") ||
   "";
+
+  const getPhoneHref = (phone) => {
+  const digits = String(phone || "").replace(/\D/g, "");
+
+  if (!digits) {
+    return null;
+  }
+
+  // Indian 10-digit number
+  if (digits.length === 10) {
+    return `tel:+91${digits}`;
+  }
+
+  // Already has country code
+  if (digits.length === 12 && digits.startsWith("91")) {
+    return `tel:+${digits}`;
+  }
+
+  return `tel:+${digits}`;
+};
 
 const readResponseData = async (response) => {
   const responseText = await response.text();
@@ -418,17 +438,7 @@ const clearPending = (id) => localStorage.removeItem(pendingKey(id));
     }
   };
 
-  const callVendor = () => {
-    const phoneNumber = String(vendor?.phone || "").trim();
-
-    if (!phoneNumber) {
-      return;
-    }
-
-    scheduleExperiencePopup();
-
-    window.location.href = `tel:${phoneNumber}`;
-  };
+ 
 
   const whatsappVendor = () => {
     const normalizedNumber = String(
@@ -506,7 +516,8 @@ const clearPending = (id) => localStorage.removeItem(pendingKey(id));
     return null;
   }
 
-  const hasPhone = Boolean(String(vendor.phone || "").trim());
+  const phoneHref = getPhoneHref(vendor.phone);
+const hasPhone = Boolean(phoneHref);
 
   const hasWhatsApp = Boolean(
     String(vendor.whatsapp || vendor.phone || "").replace(/\D/g, "")
@@ -775,15 +786,22 @@ const clearPending = (id) => localStorage.removeItem(pendingKey(id));
       </main>
 
       <div className="vd-actionbar">
-        <button
-          type="button"
-          className="call"
-          onClick={callVendor}
-          disabled={!hasPhone}
-        >
-          <FiPhone />
-          <span>Call Now</span>
-        </button>
+        <a
+  className={`call ${!hasPhone ? "disabled" : ""}`}
+  href={phoneHref || undefined}
+  aria-disabled={!hasPhone}
+  onClick={(event) => {
+    if (!hasPhone) {
+      event.preventDefault();
+      return;
+    }
+
+    scheduleExperiencePopup();
+  }}
+>
+  <FiPhone />
+  <span>Call Now</span>
+</a>
 
         <button
           type="button"
@@ -791,8 +809,8 @@ const clearPending = (id) => localStorage.removeItem(pendingKey(id));
           onClick={whatsappVendor}
           disabled={!hasWhatsApp}
         >
-          <FiMessageCircle />
-          <span>WhatsApp</span>
+          <FaWhatsapp />
+<span>WhatsApp</span>
         </button>
       </div>
 
