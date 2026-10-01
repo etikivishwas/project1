@@ -413,15 +413,20 @@ exports.googleLogin = async (req, res) => {
     // VERIFY GOOGLE TOKEN
     // -------------------------------------------------
 
-    const ticket =
-      await googleClient.verifyIdToken({
-        idToken: credential,
-        audience:
-          process.env.GOOGLE_CLIENT_ID,
-      });
+   
 
-    const payload =
-      ticket.getPayload();
+const ticket =
+  await googleClient.verifyIdToken({
+    idToken: credential,
+    audience:
+      process.env.GOOGLE_CLIENT_ID,
+  });
+
+
+const payload =
+  ticket.getPayload();
+
+
 
     const {
       sub: googleId,
@@ -436,6 +441,7 @@ exports.googleLogin = async (req, res) => {
           "Google account email is not verified.",
       });
     }
+    
 
     const [rows] = await pool.query(
       `

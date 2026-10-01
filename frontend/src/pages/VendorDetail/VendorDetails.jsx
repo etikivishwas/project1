@@ -608,14 +608,10 @@ const clearPending = (id) => localStorage.removeItem(pendingKey(id));
 
                 return (
                   <button
-                    type="button"
-                    className="vd-service"
-                    key={service.id || `${service.name}-${index}`}
-                    disabled={!isBookable}
-                    onClick={() =>
-                      isBookable && openBooking(service.id)
-                    }
-                  >
+  type="button"
+  className="vd-service"
+  key={service.id || `${service.name}-${index}`}
+>
                     <span className="vd-service-copy">
                       <strong>{service.name}</strong>
 
@@ -639,11 +635,6 @@ const clearPending = (id) => localStorage.removeItem(pendingKey(id));
             )}
           </div>
 
-          {bookableServices.length > 0 && (
-            <p className="vd-service-hint">
-              Select a service row to send a booking request.
-            </p>
-          )}
         </section>
 
         {gallery.length > 0 && (

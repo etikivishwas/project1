@@ -78,4 +78,20 @@ export const googleLogin = (credential) =>
     credential,
   });
 
+
+  // ===============================
+// USER LOCATION APIs
+// ===============================
+
+export const saveUserLocation = (latitude, longitude) => {
+  return api.post('/user/location', {
+    latitude,
+    longitude,
+  });
+};
+
+export const getUserLocation = () => {
+  return api.get('/user/location');
+};
+
 export default api;

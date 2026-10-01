@@ -460,12 +460,13 @@ body,
 .vd-reviews article {
   padding: 12px;
   background: #f8f9fb;
+   text-align: left;
   border-radius: 7px;
 }
 
 .vd-reviews article > div {
   display: flex;
-  align-items: center;
+  align-items: left;
   justify-content: space-between;
   gap: 10px;
 }

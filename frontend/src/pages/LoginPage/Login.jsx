@@ -8,7 +8,7 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const googleBtnRef = useRef(null);
-
+  const googleInitializedRef = useRef(false);
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -42,31 +42,37 @@ export default function Login() {
   };
 
   useEffect(() => {
-    const existingToken =
-      localStorage.getItem("token") || sessionStorage.getItem("token");
+  const existingToken =
+    localStorage.getItem("token") || sessionStorage.getItem("token");
 
-    if (existingToken) {
-      navigate("/userScreen", { replace: true });
-      return;
-    }
+  if (existingToken) {
+    navigate("/userScreen", { replace: true });
+    return;
+  }
 
-    if (!window.google || !googleBtnRef.current) {
-      return;
-    }
+  if (!window.google || !googleBtnRef.current) {
+    return;
+  }
 
-    window.google.accounts.id.initialize({
-      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-      callback: handleGoogleResponse,
-    });
+  if (googleInitializedRef.current) {
+    return;
+  }
 
-    window.google.accounts.id.renderButton(googleBtnRef.current, {
-      theme: "outline",
-      size: "large",
-      width: Math.min(window.innerWidth - 64, 416),
-      text: "continue_with",
-      shape: "rectangular",
-    });
-  }, []);
+  googleInitializedRef.current = true;
+
+  window.google.accounts.id.initialize({
+    client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+    callback: handleGoogleResponse,
+  });
+
+  window.google.accounts.id.renderButton(googleBtnRef.current, {
+    theme: "outline",
+    size: "large",
+    width: Math.min(window.innerWidth - 64, 416),
+    text: "continue_with",
+    shape: "rectangular",
+  });
+}, []);
 
   const validate = () => {
     const nextErrors = {};

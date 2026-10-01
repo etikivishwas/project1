@@ -16,6 +16,8 @@ const userSettingsRoutes =
   require(
     "./routes/userSettingsRoutes"
   );
+  const userLocationRoutes =
+  require("./routes/userLocationRoutes");
 const vendorReviewRoutes =
   require(
     "./routes/vendorReviewRoutes"
@@ -65,6 +67,11 @@ app.use(
   "/api/user",
   verifyToken,
   userSettingsRoutes
+);
+app.use(
+  "/api/user",
+  verifyToken,
+  userLocationRoutes
 );
 
 app.use(
