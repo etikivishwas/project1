@@ -54,6 +54,25 @@ const formatPrice = (value) =>
     maximumFractionDigits: 0,
   }).format(value);
 
+
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371;
+
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c;
+};
+
+
 export default function VendorSearch() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -70,6 +89,7 @@ export default function VendorSearch() {
   const [priceFilter, setPriceFilter] = useState("default");
   const [distanceFilter, setDistanceFilter] = useState("default");
   const [ratingFilter, setRatingFilter] = useState("default");
+  const [userLocation, setUserLocation] = useState(null);
 
   const fetchVendors = async () => {
     try {
@@ -97,73 +117,149 @@ export default function VendorSearch() {
     fetchVendors();
   }, []);
 
+  useEffect(() => {
+  const fetchUserLocation = async () => {
+    try {
+      const token =
+        localStorage.getItem("token") ||
+        sessionStorage.getItem("token");
+
+      if (!token) return;
+
+      const response = await fetch(`${API_URL}/api/user/location`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success && result.data) {
+        setUserLocation({
+          latitude: Number(result.data.latitude),
+          longitude: Number(result.data.longitude),
+        });
+      }
+    } catch (error) {
+      console.error("User location fetch error:", error);
+    }
+  };
+
+  fetchUserLocation();
+}, []);
+
   const filteredVendors = useMemo(() => {
-    if (!hasSearched || !searchText.trim()) {
-      return [];
+  if (!hasSearched || !searchText.trim()) {
+    return [];
+  }
+
+  const queryWords = searchText
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  const results = allVendors.filter((vendor) => {
+    const subcategoryText = Array.isArray(vendor.subcategories)
+      ? vendor.subcategories.join(" ")
+      : vendor.subcategories || "";
+
+    const searchableText = [
+      vendor.name,
+      vendor.service_type,
+      vendor.description,
+      vendor.address,
+      vendor.city,
+      vendor.state,
+      subcategoryText,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return queryWords.every((word) =>
+      searchableText.includes(word)
+    );
+  });
+
+  // Calculate distance AFTER filtering the vendors
+  const vendorsWithDistance = results.map((vendor) => {
+    if (
+      !userLocation ||
+      vendor.latitude === null ||
+      vendor.longitude === null
+    ) {
+      return {
+        ...vendor,
+        distance: null,
+      };
     }
 
-    const query = searchText.trim().toLowerCase();
+    return {
+      ...vendor,
+      distance: calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        Number(vendor.latitude),
+        Number(vendor.longitude)
+      ),
+    };
+  });
 
-    const results = allVendors.filter((vendor) => {
-      const searchableText = [
-        vendor.name,
-        vendor.service_type,
-        vendor.description,
-        vendor.address,
-        vendor.city,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
+  return [...vendorsWithDistance].sort((a, b) => {
+    if (priceFilter !== "default") {
+      const firstPrice = getStartingPrice(a);
+      const secondPrice = getStartingPrice(b);
 
-      return searchableText.includes(query);
-    });
+      const priceA =
+        firstPrice ?? (priceFilter === "low" ? Infinity : 0);
+      const priceB =
+        secondPrice ?? (priceFilter === "low" ? Infinity : 0);
 
-    return [...results].sort((a, b) => {
-      if (priceFilter !== "default") {
-        const firstPrice = getStartingPrice(a);
-        const secondPrice = getStartingPrice(b);
-        const priceA = firstPrice ?? (priceFilter === "low" ? Infinity : 0);
-        const priceB = secondPrice ?? (priceFilter === "low" ? Infinity : 0);
-        const priceDifference =
-          priceFilter === "low" ? priceA - priceB : priceB - priceA;
+      const priceDifference =
+        priceFilter === "low"
+          ? priceA - priceB
+          : priceB - priceA;
 
-        if (priceDifference !== 0) {
-          return priceDifference;
-        }
+      if (priceDifference !== 0) {
+        return priceDifference;
       }
+    }
 
-      if (distanceFilter !== "default") {
-        const distanceA = Number(a.distance ?? Infinity);
-        const distanceB = Number(b.distance ?? Infinity);
-        const distanceDifference =
-          distanceFilter === "near"
-            ? distanceA - distanceB
-            : distanceB - distanceA;
+    if (distanceFilter !== "default") {
+      const distanceA = a.distance ?? Infinity;
+      const distanceB = b.distance ?? Infinity;
 
-        if (distanceDifference !== 0) {
-          return distanceDifference;
-        }
+      const distanceDifference =
+        distanceFilter === "near"
+          ? distanceA - distanceB
+          : distanceB - distanceA;
+
+      if (distanceDifference !== 0) {
+        return distanceDifference;
       }
+    }
 
-      if (ratingFilter !== "default") {
-        const ratingA = Number(a.rating || 0);
-        const ratingB = Number(b.rating || 0);
-        return ratingFilter === "high"
-          ? ratingB - ratingA
-          : ratingA - ratingB;
-      }
+    if (ratingFilter !== "default") {
+      const ratingA = Number(a.rating || 0);
+      const ratingB = Number(b.rating || 0);
 
-      return Number(b.is_premium || 0) - Number(a.is_premium || 0);
-    });
-  }, [
-    allVendors,
-    searchText,
-    hasSearched,
-    priceFilter,
-    distanceFilter,
-    ratingFilter,
-  ]);
+      return ratingFilter === "high"
+        ? ratingB - ratingA
+        : ratingA - ratingB;
+    }
+
+    return Number(b.is_premium || 0) - Number(a.is_premium || 0);
+  });
+}, [
+  allVendors,
+  searchText,
+  hasSearched,
+  priceFilter,
+  distanceFilter,
+  ratingFilter,
+  userLocation,
+]);
 
   const activeFilterCount = [priceFilter, distanceFilter, ratingFilter].filter(
     (value) => value !== "default"
