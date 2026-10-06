@@ -602,6 +602,7 @@ button {
 }
 
 .vendor-card {
+  position: relative;
   min-width: 0;
   padding: 12px;
   overflow: hidden;
@@ -736,6 +737,31 @@ button {
   margin: 0;
   color: var(--tezo-muted);
   font-size: 11px;
+}
+.save-provider-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 3;
+  color: #555;
+}
+
+.save-provider-button svg {
+  width: 19px;
+  height: 19px;
+}
+
+.save-provider-button.saved {
+  color: #e53935;
 }
 
 .vendor-status button {
@@ -923,7 +949,143 @@ button {
   line-height: 1 !important;
   font-weight: 600 !important;
 }
+/* =========================================================
+   RECENT SEARCHES
+   ========================================================= */
 
+.recent-searches {
+  margin-top: 8px;
+  padding: 7px 9px;
+
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.recent-searches-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  height: 28px;
+  padding: 0 3px;
+}
+
+.recent-searches-header span {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.recent-searches-header button {
+  padding: 2px 3px;
+
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 9px;
+  font-weight: 600;
+
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.search-hero {
+  position: relative;
+  z-index: 20;
+}
+
+.recent-searches {
+  position: relative;
+  z-index: 21;
+  pointer-events: auto;
+}
+
+.recent-searches-header {
+  height: 36px;
+}
+
+.recent-searches-header button {
+  position: relative;
+  z-index: 22;
+  pointer-events: auto;
+  min-width: 56px;
+  height: 36px;
+  padding: 0 10px;
+  font-size: 12px;
+  touch-action: manipulation;
+}
+.recent-searches-header button:active {
+  color: #ffffff;
+}
+
+.recent-search-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.recent-search-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  width: 100%;
+  min-height: 31px;
+  padding: 3px;
+
+  color: rgba(255, 255, 255, 0.92);
+  text-align: left;
+
+  background: transparent;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+  cursor: pointer;
+}
+
+.recent-search-item:first-child {
+  border-top: 0;
+}
+
+.recent-search-item > svg:first-child {
+  flex: 0 0 auto;
+
+  width: 12px;
+  height: 12px;
+
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.recent-search-item span {
+  flex: 1;
+  min-width: 0;
+
+  overflow: hidden;
+
+  color: rgba(255, 255, 255, 0.90);
+  font-size: 10px;
+  font-weight: 500;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-search-item > svg:last-child {
+  flex: 0 0 auto;
+
+  width: 12px;
+  height: 12px;
+
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.recent-search-item:active {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 7px;
+}
 /* Selected tab: only the icon receives the green capsule. */
 .bottom-nav-item.active .bottom-nav-icon {
   width: 52px !important;
@@ -1020,6 +1182,7 @@ button {
 
   .vendor-card {
     padding: 9px;
+    position: relative;
   }
 
   .vendor-name-row h3 {

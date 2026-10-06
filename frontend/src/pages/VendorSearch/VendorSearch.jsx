@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef,useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   FiArrowLeft,
@@ -7,7 +7,6 @@ import {
   FiHome,
   FiInfo,
   FiMapPin,
-  FiMessageSquare,
   FiPhone,
   FiRefreshCw,
   FiSearch,
@@ -18,6 +17,7 @@ import {
 import logo from "../../assets/logo.jpeg";
 import "./VendorSearch.css";
 import { FaWhatsapp } from "react-icons/fa";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const fallbackVendorImage =
@@ -55,8 +55,7 @@ const formatPrice = (value) =>
     maximumFractionDigits: 0,
   }).format(value);
 
-
-  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371;
 
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -73,13 +72,13 @@ const formatPrice = (value) =>
   return R * c;
 };
 
-
 export default function VendorSearch() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-
+  const lastSavedSearchRef = useRef("");
   const initialSearch = searchParams.get("search") || "";
+  const isFeatured = searchParams.get("featured") === "true";
 
   const [searchText, setSearchText] = useState(initialSearch);
   const [allVendors, setAllVendors] = useState([]);
@@ -92,6 +91,79 @@ export default function VendorSearch() {
   const [ratingFilter, setRatingFilter] = useState("default");
   const [userLocation, setUserLocation] = useState(null);
   const [selectedVendor, setSelectedVendor] = useState(null);
+  const [searchHistory, setSearchHistory] = useState([]);
+
+  const fetchSearchHistory = async () => {
+    try {
+      const token =
+        localStorage.getItem("token") ||
+        sessionStorage.getItem("token");
+
+      if (!token) {
+        setSearchHistory([]);
+        return;
+      }
+
+      const response = await fetch(
+        `${API_URL}/api/search-history`,
+        {
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setSearchHistory(
+          Array.isArray(result.data) ? result.data : []
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Failed to fetch search history:",
+        error
+      );
+    }
+  };
+
+  const saveSearchHistory = async (query) => {
+    try {
+      const token =
+        localStorage.getItem("token") ||
+        sessionStorage.getItem("token");
+
+      if (!token || !query) {
+        return;
+      }
+
+      const response = await fetch(
+        `${API_URL}/api/search-history`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            searchQuery: query,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        fetchSearchHistory();
+      }
+    } catch (error) {
+      console.error(
+        "Failed to save search history:",
+        error
+      );
+    }
+  };
+
   const fetchVendors = async () => {
     try {
       setLoading(true);
@@ -101,14 +173,23 @@ export default function VendorSearch() {
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        throw new Error(result.message || "Failed to fetch vendors");
+        throw new Error(
+          result.message || "Failed to fetch vendors"
+        );
       }
 
-      setAllVendors(Array.isArray(result.data) ? result.data : []);
+      setAllVendors(
+        Array.isArray(result.data) ? result.data : []
+      );
     } catch (requestError) {
-      console.error("Vendor fetch error:", requestError);
+      console.error(
+        "Vendor fetch error:",
+        requestError
+      );
       setAllVendors([]);
-      setError("Unable to load service providers. Please try again.");
+      setError(
+        "Unable to load service providers. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -119,161 +200,230 @@ export default function VendorSearch() {
   }, []);
 
   useEffect(() => {
-  const fetchUserLocation = async () => {
-    try {
-      const token =
-        localStorage.getItem("token") ||
-        sessionStorage.getItem("token");
+    fetchSearchHistory();
+  }, []);
 
-      if (!token) return;
+  useEffect(() => {
+    const fetchUserLocation = async () => {
+      try {
+        const token =
+          localStorage.getItem("token") ||
+          sessionStorage.getItem("token");
 
-      const response = await fetch(`${API_URL}/api/user/location`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+        if (!token) return;
 
-      const result = await response.json();
+        const response = await fetch(
+          `${API_URL}/api/user/location`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-      if (response.ok && result.success && result.data) {
-        setUserLocation({
-          latitude: Number(result.data.latitude),
-          longitude: Number(result.data.longitude),
-        });
+        const result = await response.json();
+
+        if (
+          response.ok &&
+          result.success &&
+          result.data
+        ) {
+          setUserLocation({
+            latitude: Number(result.data.latitude),
+            longitude: Number(result.data.longitude),
+          });
+        }
+      } catch (error) {
+        console.error(
+          "User location fetch error:",
+          error
+        );
       }
-    } catch (error) {
-      console.error("User location fetch error:", error);
-    }
-  };
+    };
 
-  fetchUserLocation();
-}, []);
+    fetchUserLocation();
+  }, []);
+
+  /*
+   * Save searches whenever the URL search parameter changes.
+   * This handles:
+   * - manual searches
+   * - quick searches
+   * - recent searches
+   * - category searches
+   * - subcategory searches
+   */
+  useEffect(() => {
+  const query =
+    searchParams.get("search")?.trim() || "";
+
+  if (!query || isFeatured) {
+    return;
+  }
+
+  const normalizedQuery = query.toLowerCase();
+
+  if (lastSavedSearchRef.current === normalizedQuery) {
+    return;
+  }
+
+  lastSavedSearchRef.current = normalizedQuery;
+
+  saveSearchHistory(query);
+}, [searchParams, isFeatured]);
 
   const filteredVendors = useMemo(() => {
-  if (!hasSearched || !searchText.trim()) {
-    return [];
-  }
+    if (isFeatured) {
+      const premiumVendors = allVendors.filter(
+        (vendor) =>
+          Number(vendor.is_premium || 0) === 1
+      );
 
-  const queryWords = searchText
-    .trim()
-    .toLowerCase()
-    .split(/\s+/)
-    .filter(Boolean);
+      return [...premiumVendors].sort(
+        (a, b) =>
+          Number(b.is_verified || 0) -
+            Number(a.is_verified || 0) ||
+          Number(b.rating || 0) -
+            Number(a.rating || 0)
+      );
+    }
 
-  const results = allVendors.filter((vendor) => {
-    const subcategoryText = Array.isArray(vendor.subcategories)
-      ? vendor.subcategories.join(" ")
-      : vendor.subcategories || "";
+    if (!hasSearched || !searchText.trim()) {
+      return [];
+    }
 
-    const searchableText = [
-      vendor.name,
-      vendor.service_type,
-      vendor.description,
-      vendor.address,
-      vendor.city,
-      vendor.state,
-      subcategoryText,
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
+    const queryWords = searchText
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean);
 
-    return queryWords.every((word) =>
-      searchableText.includes(word)
+    const results = allVendors.filter((vendor) => {
+      const subcategoryText = Array.isArray(
+        vendor.subcategories
+      )
+        ? vendor.subcategories.join(" ")
+        : vendor.subcategories || "";
+
+      const searchableText = [
+        vendor.name,
+        vendor.service_type,
+        vendor.description,
+        vendor.address,
+        vendor.city,
+        vendor.state,
+        subcategoryText,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return queryWords.every((word) =>
+        searchableText.includes(word)
+      );
+    });
+
+    const vendorsWithDistance = results.map(
+      (vendor) => {
+        if (
+          !userLocation ||
+          vendor.latitude === null ||
+          vendor.longitude === null
+        ) {
+          return {
+            ...vendor,
+            distance: null,
+          };
+        }
+
+        return {
+          ...vendor,
+          distance: calculateDistance(
+            userLocation.latitude,
+            userLocation.longitude,
+            Number(vendor.latitude),
+            Number(vendor.longitude)
+          ),
+        };
+      }
     );
-  });
 
-  // Calculate distance AFTER filtering the vendors
-  const vendorsWithDistance = results.map((vendor) => {
-    if (
-      !userLocation ||
-      vendor.latitude === null ||
-      vendor.longitude === null
-    ) {
-      return {
-        ...vendor,
-        distance: null,
-      };
-    }
+    return [...vendorsWithDistance].sort((a, b) => {
+      if (priceFilter !== "default") {
+        const firstPrice = getStartingPrice(a);
+        const secondPrice = getStartingPrice(b);
 
-    return {
-      ...vendor,
-      distance: calculateDistance(
-        userLocation.latitude,
-        userLocation.longitude,
-        Number(vendor.latitude),
-        Number(vendor.longitude)
-      ),
-    };
-  });
+        const priceA =
+          firstPrice ??
+          (priceFilter === "low" ? Infinity : 0);
 
-  return [...vendorsWithDistance].sort((a, b) => {
-    if (priceFilter !== "default") {
-      const firstPrice = getStartingPrice(a);
-      const secondPrice = getStartingPrice(b);
+        const priceB =
+          secondPrice ??
+          (priceFilter === "low" ? Infinity : 0);
 
-      const priceA =
-        firstPrice ?? (priceFilter === "low" ? Infinity : 0);
-      const priceB =
-        secondPrice ?? (priceFilter === "low" ? Infinity : 0);
+        const priceDifference =
+          priceFilter === "low"
+            ? priceA - priceB
+            : priceB - priceA;
 
-      const priceDifference =
-        priceFilter === "low"
-          ? priceA - priceB
-          : priceB - priceA;
-
-      if (priceDifference !== 0) {
-        return priceDifference;
+        if (priceDifference !== 0) {
+          return priceDifference;
+        }
       }
-    }
 
-    if (distanceFilter !== "default") {
-      const distanceA = a.distance ?? Infinity;
-      const distanceB = b.distance ?? Infinity;
+      if (distanceFilter !== "default") {
+        const distanceA = a.distance ?? Infinity;
+        const distanceB = b.distance ?? Infinity;
 
-      const distanceDifference =
-        distanceFilter === "near"
-          ? distanceA - distanceB
-          : distanceB - distanceA;
+        const distanceDifference =
+          distanceFilter === "near"
+            ? distanceA - distanceB
+            : distanceB - distanceA;
 
-      if (distanceDifference !== 0) {
-        return distanceDifference;
+        if (distanceDifference !== 0) {
+          return distanceDifference;
+        }
       }
-    }
 
-    if (ratingFilter !== "default") {
-      const ratingA = Number(a.rating || 0);
-      const ratingB = Number(b.rating || 0);
+      if (ratingFilter !== "default") {
+        const ratingA = Number(a.rating || 0);
+        const ratingB = Number(b.rating || 0);
 
-      return ratingFilter === "high"
-        ? ratingB - ratingA
-        : ratingA - ratingB;
-    }
+        return ratingFilter === "high"
+          ? ratingB - ratingA
+          : ratingA - ratingB;
+      }
 
-    if (distanceFilter === "default") {
-  const distanceA = a.distance ?? Infinity;
-  const distanceB = b.distance ?? Infinity;
+      if (distanceFilter === "default") {
+        const distanceA = a.distance ?? Infinity;
+        const distanceB = b.distance ?? Infinity;
 
-  if (distanceA !== distanceB) {
-    return distanceA - distanceB;
-  }
-}
+        if (distanceA !== distanceB) {
+          return distanceA - distanceB;
+        }
+      }
 
-return Number(b.is_premium || 0) - Number(a.is_premium || 0);
-  });
-}, [
-  allVendors,
-  searchText,
-  hasSearched,
-  priceFilter,
-  distanceFilter,
-  ratingFilter,
-  userLocation,
-]);
+      return (
+        Number(b.is_premium || 0) -
+        Number(a.is_premium || 0)
+      );
+    });
+  }, [
+    allVendors,
+    searchText,
+    hasSearched,
+    priceFilter,
+    distanceFilter,
+    ratingFilter,
+    userLocation,
+    isFeatured,
+  ]);
 
-  const activeFilterCount = [priceFilter, distanceFilter, ratingFilter].filter(
-    (value) => value !== "default"
-  ).length;
+  const activeFilterCount = [
+    priceFilter,
+    distanceFilter,
+    ratingFilter,
+  ].filter((value) => value !== "default").length;
 
   const handleSearch = (value = searchText) => {
     const query = value.trim();
@@ -288,6 +438,42 @@ return Number(b.is_premium || 0) - Number(a.is_premium || 0);
     setHasSearched(true);
     setSearchParams({ search: query });
   };
+
+  const clearSearchHistory = async () => {
+  const token =
+    localStorage.getItem("token") ||
+    sessionStorage.getItem("token");
+
+  if (!token) {
+    setSearchHistory([]);
+    return;
+  }
+
+  // Clear UI immediately
+  setSearchHistory([]);
+
+  try {
+    const response = await fetch(
+      `${API_URL}/api/search-history`,
+      {
+        method: "DELETE",
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+        if (!response.ok) {
+      throw new Error("Failed to clear search history.");
+    }
+  } catch (error) {
+    console.error(
+      "Clear search history error:",
+      error
+    );
+  }
+};
 
   const handleClearSearch = () => {
     setSearchText("");
@@ -310,9 +496,15 @@ return Number(b.is_premium || 0) - Number(a.is_premium || 0);
       return;
     }
 
-    const cleanNumber = String(phone).replace(/\D/g, "");
+    const cleanNumber = String(phone).replace(
+      /\D/g,
+      ""
+    );
+
     const whatsappNumber =
-      cleanNumber.length === 10 ? `91${cleanNumber}` : cleanNumber;
+      cleanNumber.length === 10
+        ? `91${cleanNumber}`
+        : cleanNumber;
 
     window.open(
       `https://wa.me/${whatsappNumber}`,
@@ -323,11 +515,15 @@ return Number(b.is_premium || 0) - Number(a.is_premium || 0);
 
   const isFooterActive = (path) => {
     if (path === "/vendorSearch") {
-      return location.pathname.startsWith("/vendorSearch");
+      return location.pathname.startsWith(
+        "/vendorSearch"
+      );
     }
 
     if (path === "/userHistory") {
-      return location.pathname.startsWith("/userHistory");
+      return location.pathname.startsWith(
+        "/userHistory"
+      );
     }
 
     return location.pathname === path;
@@ -337,109 +533,164 @@ return Number(b.is_premium || 0) - Number(a.is_premium || 0);
     <>
       <div className="vendor-search-page">
         <header className="vendor-search-header">
-  <button
-    type="button"
-    className="vendor-back-button"
-    onClick={() => navigate("/userScreen")}
-    aria-label="Go to home"
-  >
-    <FiArrowLeft />
-  </button>
+          <button
+            type="button"
+            className="vendor-back-button"
+            onClick={() => navigate("/userScreen")}
+            aria-label="Go to home"
+          >
+            <FiArrowLeft />
+          </button>
 
-  <div className="vendor-search-brand">
-    <img src={logo} alt="Milieu Global" />
+          <div className="vendor-search-brand">
+            <img src={logo} alt="Milieu Global" />
 
-    <div>
-      <small>DISCOVER SERVICES</small>
-      <strong>Search Providers</strong>
-    </div>
-  </div>
-</header>
+            <div>
+              <small>DISCOVER SERVICES</small>
+              <strong>Search Providers</strong>
+            </div>
+          </div>
+        </header>
 
-<section className="search-hero">
-  <div className="search-hero-copy">
-    <span>TRUSTED LOCAL PROFESSIONALS</span>
+        <section className="search-hero">
+          <div className="search-hero-copy">
+            <span>TRUSTED LOCAL PROFESSIONALS</span>
 
-    <h1>What service do you need?</h1>
+            <h1>What service do you need?</h1>
 
-    <p>
-      Search by service, provider name, city, or locality.
-    </p>
-  </div>
+            <p>
+              Search by service, provider name, city,
+              or locality.
+            </p>
+          </div>
 
-  <form
-    className="vendor-search-bar-wrapper"
-    onSubmit={(event) => {
-      event.preventDefault();
-      handleSearch();
-    }}
-  >
-    <div className="vendor-search-input-container">
-  <FiSearch className="search-input-icon" />
+          <form
+            className="vendor-search-bar-wrapper"
+            onSubmit={(event) => {
+              event.preventDefault();
+              handleSearch();
+            }}
+          >
+            <div className="vendor-search-input-container">
+              <FiSearch className="search-input-icon" />
 
-  <input
-    type="text"
-    value={searchText}
-    onChange={(event) => setSearchText(event.target.value)}
-    placeholder="Plumber, electrician, Hyderabad..."
-    className="vendor-search-input"
-    autoComplete="off"
-  />
+              <input
+                type="text"
+                value={searchText}
+                onChange={(event) =>
+                  setSearchText(event.target.value)
+                }
+                placeholder="Plumber, electrician, Hyderabad..."
+                className="vendor-search-input"
+                autoComplete="off"
+              />
 
-  {searchText && (
-    <button
-      type="button"
-      className="clear-search-button"
-      onClick={handleClearSearch}
-      aria-label="Clear search"
-    >
-      <FiX />
-    </button>
-  )}
-</div>
+              {searchText && (
+                <button
+                  type="button"
+                  className="clear-search-button"
+                  onClick={handleClearSearch}
+                  aria-label="Clear search"
+                >
+                  <FiX />
+                </button>
+              )}
+            </div>
 
+            <button
+              type="button"
+              className={`filter-icon-button ${
+                filtersOpen ? "active" : ""
+              }`}
+              onClick={() =>
+                setFiltersOpen((current) => !current)
+              }
+              aria-label="Toggle filters"
+              aria-expanded={filtersOpen}
+            >
+              <FiSliders />
 
+              <span>Filter</span>
 
-<button
-  type="button"
-  className={`filter-icon-button ${filtersOpen ? "active" : ""}`}
-  onClick={() => setFiltersOpen((current) => !current)}
-  aria-label="Toggle filters"
-  aria-expanded={filtersOpen}
->
-  <FiSliders />
+              {activeFilterCount > 0 && (
+                <span className="filter-count">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          </form>
 
-  <span>Filter</span>
+          {!hasSearched &&
+            !isFeatured &&
+            searchHistory.length > 0 && (
+              <div className="search-history-panel">
+                <div className="search-history-header">
+                  <div>
+                    <small>RECENT</small>
+                    <strong>Recent searches</strong>
+                  </div>
 
-  {activeFilterCount > 0 && (
-    <span className="filter-count">
-      {activeFilterCount}
-    </span>
-  )}
-</button>
-  </form>
+                  <button
+                    type="button"
+                    onClick={clearSearchHistory}
+                  >
+                    Clear
+                  </button>
+                </div>
 
-  {!hasSearched && (
-    <div className="quick-search-row">
-      {quickSearches.map((item) => (
-        <button
-          type="button"
-          key={item}
-          onClick={() => handleSearch(item)}
+                <div className="search-history-list">
+                  {searchHistory.map((item) => (
+                    <button
+                      type="button"
+                      key={item.id}
+                      className="search-history-item"
+                      onClick={() =>
+                        handleSearch(
+                          item.searchQuery
+                        )
+                      }
+                    >
+                      <span className="search-history-icon">
+                        <FiClock />
+                      </span>
+
+                      <span className="search-history-text">
+                        {item.searchQuery}
+                      </span>
+
+                      <FiArrowLeft className="search-history-arrow" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+          {!hasSearched && !isFeatured && (
+            <div className="quick-search-row">
+              {quickSearches.map((item) => (
+                <button
+                  type="button"
+                  key={item}
+                  onClick={() => handleSearch(item)}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section
+          className={`filter-panel ${
+            filtersOpen ? "open" : ""
+          }`}
         >
-          {item}
-        </button>
-      ))}
-    </div>
-  )}
-</section>
-
-        <section className={`filter-panel ${filtersOpen ? "open" : ""}`}>
           <div className="filter-panel-heading">
             <div>
               <small>SORT RESULTS</small>
               <h2>Refine your search</h2>
             </div>
+
             <button
               type="button"
               onClick={() => {
@@ -455,45 +706,79 @@ return Number(b.is_premium || 0) - Number(a.is_premium || 0);
           <div className="vendor-filter-row">
             <label className="filter-field">
               <span>Price</span>
+
               <div>
                 <select
                   value={priceFilter}
-                  onChange={(event) => setPriceFilter(event.target.value)}
+                  onChange={(event) =>
+                    setPriceFilter(event.target.value)
+                  }
                 >
-                  <option value="default">Any price</option>
-                  <option value="low">Low to high</option>
-                  <option value="high">High to low</option>
+                  <option value="default">
+                    Any price
+                  </option>
+                  <option value="low">
+                    Low to high
+                  </option>
+                  <option value="high">
+                    High to low
+                  </option>
                 </select>
+
                 <FiChevronDown />
               </div>
             </label>
 
             <label className="filter-field">
               <span>Distance</span>
+
               <div>
                 <select
                   value={distanceFilter}
-                  onChange={(event) => setDistanceFilter(event.target.value)}
+                  onChange={(event) =>
+                    setDistanceFilter(
+                      event.target.value
+                    )
+                  }
                 >
-                  <option value="default">Any distance</option>
-                  <option value="near">Nearest first</option>
-                  <option value="far">Farthest first</option>
+                  <option value="default">
+                    Any distance
+                  </option>
+                  <option value="near">
+                    Nearest first
+                  </option>
+                  <option value="far">
+                    Farthest first
+                  </option>
                 </select>
+
                 <FiChevronDown />
               </div>
             </label>
 
             <label className="filter-field">
               <span>Rating</span>
+
               <div>
                 <select
                   value={ratingFilter}
-                  onChange={(event) => setRatingFilter(event.target.value)}
+                  onChange={(event) =>
+                    setRatingFilter(
+                      event.target.value
+                    )
+                  }
                 >
-                  <option value="default">Any rating</option>
-                  <option value="high">Highest rated</option>
-                  <option value="low">Lowest rated</option>
+                  <option value="default">
+                    Any rating
+                  </option>
+                  <option value="high">
+                    Highest rated
+                  </option>
+                  <option value="low">
+                    Lowest rated
+                  </option>
                 </select>
+
                 <FiChevronDown />
               </div>
             </label>
@@ -502,10 +787,17 @@ return Number(b.is_premium || 0) - Number(a.is_premium || 0);
 
         <main className="vendor-search-content">
           {loading && (
-            <div className="vendor-result-list" aria-label="Loading providers">
+            <div
+              className="vendor-result-list"
+              aria-label="Loading providers"
+            >
               {[1, 2, 3].map((item) => (
-                <article className="vendor-result-card search-skeleton" key={item}>
+                <article
+                  className="vendor-result-card search-skeleton"
+                  key={item}
+                >
                   <span className="skeleton-image" />
+
                   <span className="skeleton-copy">
                     <i />
                     <i />
@@ -521,38 +813,65 @@ return Number(b.is_premium || 0) - Number(a.is_premium || 0);
               <span className="search-status-icon">
                 <FiRefreshCw />
               </span>
+
               <h2>Providers could not be loaded</h2>
+
               <p>{error}</p>
-              <button type="button" onClick={fetchVendors}>
+
+              <button
+                type="button"
+                onClick={fetchVendors}
+              >
                 Try again
               </button>
             </div>
           )}
 
-          {!loading && !error && !hasSearched && (
-            <div className="search-empty-state">
-              <span className="search-empty-icon">
-                <FiSearch />
-              </span>
-              <h2>Find the right service provider</h2>
-              <p>
-                Enter a service or location above, or choose one of the popular
-                searches.
-              </p>
-            </div>
-          )}
+          {!loading &&
+            !error &&
+            !hasSearched &&
+            !isFeatured && (
+              <div className="search-empty-state">
+                <span className="search-empty-icon">
+                  <FiSearch />
+                </span>
+
+                <h2>
+                  Find the right service provider
+                </h2>
+
+                <p>
+                  Enter a service or location above, or
+                  choose one of the popular searches.
+                </p>
+              </div>
+            )}
 
           {!loading &&
             !error &&
-            hasSearched &&
+            (isFeatured || hasSearched) &&
             filteredVendors.length === 0 && (
               <div className="search-status">
                 <span className="search-status-icon">
                   <FiSearch />
                 </span>
-                <h2>No providers found</h2>
-                <p>Try a broader service name or another location.</p>
-                <button type="button" onClick={handleClearSearch}>
+
+                <h2>
+                  {isFeatured
+                    ? "No premium providers found"
+                    : "No providers found"}
+                </h2>
+
+                <p>
+                  {isFeatured
+                    ? "There are currently no premium providers available."
+                    : "Try a broader service name or another location."}
+                </p>
+
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                >
                   Clear search
                 </button>
               </div>
@@ -560,278 +879,406 @@ return Number(b.is_premium || 0) - Number(a.is_premium || 0);
 
           {!loading &&
             !error &&
-            hasSearched &&
+            (isFeatured || hasSearched) &&
             filteredVendors.length > 0 && (
               <section className="vendor-results">
                 <div className="results-header">
                   <div>
-                    <small>SEARCH RESULTS</small>
+                    <small>
+                      {isFeatured
+                        ? "FEATURED PROVIDERS"
+                        : "SEARCH RESULTS"}
+                    </small>
+
                     <h2>
                       {filteredVendors.length}{" "}
-                      {filteredVendors.length === 1 ? "provider" : "providers"}
-                      {" "}found
+                      {filteredVendors.length === 1
+                        ? "provider"
+                        : "providers"}
+                      {isFeatured
+                        ? " featured"
+                        : " found"}
                     </h2>
                   </div>
-                  <span>“{searchText.trim()}”</span>
+
+                  <span>
+                    {isFeatured
+                      ? "Premium providers"
+                      : `“${searchText.trim()}”`}
+                  </span>
                 </div>
 
                 <div className="vendor-result-list">
-                  {filteredVendors.map((vendor, index) => {
-                    const startingPrice = getStartingPrice(vendor);
+                  {filteredVendors.map(
+                    (vendor, index) => {
+                      const startingPrice =
+                        getStartingPrice(vendor);
 
-                    return (
-                      <article
-                        className={`vendor-result-card ${
-                          vendor.is_premium ? "premium-card" : ""
-                        }`}
-                        key={vendor.id}
-                        style={{ "--result-index": index }}
-                      >
-                        <div className="vendor-card-top">
-                          <div className="vendor-image-wrap">
-                            <img
-                              src={vendor.image_url || fallbackVendorImage}
-                              alt={vendor.name || "Service provider"}
-                              onError={(event) => {
-                                event.currentTarget.onerror = null;
-                                event.currentTarget.src = fallbackVendorImage;
-                              }}
-                            />
-                            {vendor.is_premium ? (
-                              <span className="premium-badge">Premium</span>
-                            ) : null}
-                          </div>
+                      return (
+                        <article
+                          className={`vendor-result-card ${
+                            vendor.is_premium
+                              ? "premium-card"
+                              : ""
+                          }`}
+                          key={vendor.id}
+                          style={{
+                            "--result-index": index,
+                          }}
+                        >
+                          <div className="vendor-card-top">
+                            <div className="vendor-image-wrap">
+                              <img
+                                src={
+                                  vendor.image_url ||
+                                  fallbackVendorImage
+                                }
+                                alt={
+                                  vendor.name ||
+                                  "Service provider"
+                                }
+                                onError={(event) => {
+                                  event.currentTarget.onerror =
+                                    null;
 
-                          <div className="vendor-main-info">
-                            <div className="vendor-name-row">
-  <div className="vendor-name-with-info">
-    <h3>{vendor.name}</h3>
+                                  event.currentTarget.src =
+                                    fallbackVendorImage;
+                                }}
+                              />
 
-    <button
-      type="button"
-      className="vendor-info-button"
-      onClick={() => setSelectedVendor(vendor)}
-      aria-label={`View details for ${vendor.name}`}
-    >
-      <FiInfo />
-    </button>
-  </div>
-
-  <span className="vendor-rating">
-    <FiStar />
-    {Number(vendor.rating || 0).toFixed(1)}
-  </span>
-</div>
-
-                            <p className="vendor-service-type">
-                              {vendor.service_type || "General Service"}
-                            </p>
-
-                            <div className="vendor-meta">
-                              {Boolean(vendor.is_verified) && (
-                                <span className="verified-badge">Verified</span>
-                              )}
-
-                              <span className="vendor-location">
-                                <FiMapPin />
-                                {vendor.city || vendor.address || "Nearby"}
-                              </span>
-                              {vendor.distance !== null && (
-    <span className="vendor-distance">
-      {vendor.distance.toFixed(1)} km away
-    </span>
-  )}
+                              {vendor.is_premium ? (
+                                <span className="premium-badge">
+                                  Premium
+                                </span>
+                              ) : null}
                             </div>
 
-                            {startingPrice !== null && (
-                              <p className="starting-price">
-                                Starts from <strong>{formatPrice(startingPrice)}</strong>
+                            <div className="vendor-main-info">
+                              <div className="vendor-name-row">
+                                <div className="vendor-name-with-info">
+                                  <h3>{vendor.name}</h3>
+
+                                  <button
+                                    type="button"
+                                    className="vendor-info-button"
+                                    onClick={() =>
+                                      setSelectedVendor(
+                                        vendor
+                                      )
+                                    }
+                                    aria-label={`View details for ${vendor.name}`}
+                                  >
+                                    <FiInfo />
+                                  </button>
+                                </div>
+
+                                <span className="vendor-rating">
+                                  <FiStar />
+
+                                  {Number(
+                                    vendor.rating || 0
+                                  ).toFixed(1)}
+                                </span>
+                              </div>
+
+                              <p className="vendor-service-type">
+                                {vendor.service_type ||
+                                  "General Service"}
                               </p>
-                            )}
+
+                              <div className="vendor-meta">
+                                {Boolean(
+                                  vendor.is_verified
+                                ) && (
+                                  <span className="verified-badge">
+                                    Verified
+                                  </span>
+                                )}
+
+                                <span className="vendor-location">
+                                  <FiMapPin />
+
+                                  {vendor.city ||
+                                    vendor.address ||
+                                    "Nearby"}
+                                </span>
+
+                                {typeof vendor.distance ===
+                                  "number" && (
+                                  <span className="vendor-distance">
+                                    {vendor.distance.toFixed(
+                                      1
+                                    )}{" "}
+                                    km away
+                                  </span>
+                                )}
+                              </div>
+
+                              {startingPrice !== null && (
+                                <p className="starting-price">
+                                  Starts from{" "}
+                                  <strong>
+                                    {formatPrice(
+                                      startingPrice
+                                    )}
+                                  </strong>
+                                </p>
+                              )}
+                            </div>
                           </div>
-                        </div>
 
-                        <div className="vendor-actions">
-                          <button
-                            type="button"
-                            className="view-provider-button"
-                            onClick={() => navigate(`/vendor/${vendor.id}`)}
-                          >
-                            View details
-                          </button>
+                          <div className="vendor-actions">
+                            <button
+                              type="button"
+                              className="view-provider-button"
+                              onClick={() =>
+                                navigate(
+                                  `/vendor/${vendor.id}`
+                                )
+                              }
+                            >
+                              View details
+                            </button>
 
-                          <a
-  className={`call-button ${!vendor.phone ? "disabled" : ""}`}
-  href={vendor.phone ? `tel:${String(vendor.phone).trim()}` : undefined}
-  aria-disabled={!vendor.phone}
-  onClick={(event) => {
-    if (!vendor.phone) {
-      event.preventDefault();
-    }
-  }}
->
-  <FiPhone /> Call
-</a>
+                            <a
+                              className={`call-button ${
+                                !vendor.phone
+                                  ? "disabled"
+                                  : ""
+                              }`}
+                              href={
+                                vendor.phone
+                                  ? `tel:${String(
+                                      vendor.phone
+                                    ).trim()}`
+                                  : undefined
+                              }
+                              aria-disabled={
+                                !vendor.phone
+                              }
+                              onClick={(event) => {
+                                if (!vendor.phone) {
+                                  event.preventDefault();
+                                }
+                              }}
+                            >
+                              <FiPhone /> Call
+                            </a>
 
-                          <button
-  type="button"
-  className="whatsapp-button"
-  onClick={() =>
-    handleWhatsApp(vendor.whatsapp || vendor.phone)
-  }
-  disabled={!vendor.whatsapp && !vendor.phone}
->
-  <FaWhatsapp /> WhatsApp
-</button>
-                        </div>
-                      </article>
-                    );
-                  })}
+                            <button
+                              type="button"
+                              className="whatsapp-button"
+                              onClick={() =>
+                                handleWhatsApp(
+                                  vendor.whatsapp ||
+                                    vendor.phone
+                                )
+                              }
+                              disabled={
+                                !vendor.whatsapp &&
+                                !vendor.phone
+                              }
+                            >
+                              <FaWhatsapp /> WhatsApp
+                            </button>
+                          </div>
+                        </article>
+                      );
+                    }
+                  )}
                 </div>
               </section>
             )}
         </main>
 
         {selectedVendor && (
-  <div
-    className="vendor-info-overlay"
-    onClick={() => setSelectedVendor(null)}
-  >
-    <div
-      className="vendor-info-modal"
-      onClick={(event) => event.stopPropagation()}
-    >
-      <button
-        type="button"
-        className="vendor-info-close"
-        onClick={() => setSelectedVendor(null)}
-        aria-label="Close vendor details"
-      >
-        <FiX />
-      </button>
+          <div
+            className="vendor-info-overlay"
+            onClick={() =>
+              setSelectedVendor(null)
+            }
+          >
+            <div
+              className="vendor-info-modal"
+              onClick={(event) =>
+                event.stopPropagation()
+              }
+            >
+              <button
+                type="button"
+                className="vendor-info-close"
+                onClick={() =>
+                  setSelectedVendor(null)
+                }
+                aria-label="Close vendor details"
+              >
+                <FiX />
+              </button>
 
-      <div className="vendor-info-modal-header">
-        <img
-          src={
-            selectedVendor.image_url ||
-            fallbackVendorImage
-          }
-          alt={selectedVendor.name || "Service provider"}
-        />
+              <div className="vendor-info-modal-header">
+                <img
+                  src={
+                    selectedVendor.image_url ||
+                    fallbackVendorImage
+                  }
+                  alt={
+                    selectedVendor.name ||
+                    "Service provider"
+                  }
+                />
 
-        <div>
-          <h2>{selectedVendor.name}</h2>
+                <div>
+                  <h2>{selectedVendor.name}</h2>
 
-          <p>
-            {selectedVendor.service_type ||
-              "General Service"}
-          </p>
-        </div>
-      </div>
+                  <p>
+                    {selectedVendor.service_type ||
+                      "General Service"}
+                  </p>
+                </div>
+              </div>
 
-      <div className="vendor-info-details">
-        <div className="vendor-info-item">
-          <span>Rating</span>
-          <strong>
-            ⭐ {Number(selectedVendor.rating || 0).toFixed(1)}
-          </strong>
-        </div>
+              <div className="vendor-info-details">
+                <div className="vendor-info-item">
+                  <span>Rating</span>
 
-        {selectedVendor.city || selectedVendor.address ? (
-          <div className="vendor-info-item">
-            <span>Location</span>
-            <strong>
-              <FiMapPin />
-              {selectedVendor.city ||
-                selectedVendor.address}
-            </strong>
-          </div>
-        ) : null}
+                  <strong>
+                    ⭐{" "}
+                    {Number(
+                      selectedVendor.rating || 0
+                    ).toFixed(1)}
+                  </strong>
+                </div>
 
-        {selectedVendor.distance !== null &&
-        selectedVendor.distance !== undefined ? (
-          <div className="vendor-info-item">
-            <span>Distance</span>
-            <strong>
-              {selectedVendor.distance.toFixed(1)} km away
-            </strong>
-          </div>
-        ) : null}
+                {selectedVendor.city ||
+                selectedVendor.address ? (
+                  <div className="vendor-info-item">
+                    <span>Location</span>
 
-        {getStartingPrice(selectedVendor) !== null ? (
-          <div className="vendor-info-item">
-            <span>Starting price</span>
-            <strong>
-              {formatPrice(
-                getStartingPrice(selectedVendor)
+                    <strong>
+                      <FiMapPin />
+
+                      {selectedVendor.city ||
+                        selectedVendor.address}
+                    </strong>
+                  </div>
+                ) : null}
+
+                {selectedVendor.distance !== null &&
+                selectedVendor.distance !== undefined ? (
+                  <div className="vendor-info-item">
+                    <span>Distance</span>
+
+                    <strong>
+                      {selectedVendor.distance.toFixed(
+                        1
+                      )}{" "}
+                      km away
+                    </strong>
+                  </div>
+                ) : null}
+
+                {getStartingPrice(
+                  selectedVendor
+                ) !== null ? (
+                  <div className="vendor-info-item">
+                    <span>Starting price</span>
+
+                    <strong>
+                      {formatPrice(
+                        getStartingPrice(
+                          selectedVendor
+                        )
+                      )}
+                    </strong>
+                  </div>
+                ) : null}
+
+                {selectedVendor.is_verified ? (
+                  <div className="vendor-info-item">
+                    <span>Status</span>
+
+                    <strong className="info-verified">
+                      ✓ Verified
+                    </strong>
+                  </div>
+                ) : null}
+              </div>
+
+              {selectedVendor.description && (
+                <div className="vendor-info-description">
+                  <span>About this provider</span>
+
+                  <p>
+                    {selectedVendor.description}
+                  </p>
+                </div>
               )}
-            </strong>
+
+              {selectedVendor.subcategories && (
+                <div className="vendor-info-services">
+                  <span>Services</span>
+
+                  <div>
+                    {(
+                      Array.isArray(
+                        selectedVendor.subcategories
+                      )
+                        ? selectedVendor.subcategories
+                        : String(
+                            selectedVendor.subcategories
+                          ).split("||")
+                    ).map((service, index) => (
+                      <span
+                        key={`${service}-${index}`}
+                      >
+                        {service}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        ) : null}
-
-        {selectedVendor.is_verified ? (
-          <div className="vendor-info-item">
-            <span>Status</span>
-            <strong className="info-verified">
-              ✓ Verified
-            </strong>
-          </div>
-        ) : null}
-      </div>
-
-      {selectedVendor.description && (
-        <div className="vendor-info-description">
-          <span>About this provider</span>
-          <p>{selectedVendor.description}</p>
-        </div>
-      )}
-
-      {selectedVendor.subcategories && (
-        <div className="vendor-info-services">
-          <span>Services</span>
-
-          <div>
-            {(Array.isArray(selectedVendor.subcategories)
-              ? selectedVendor.subcategories
-              : String(selectedVendor.subcategories)
-                  .split("||")
-            ).map((service, index) => (
-              <span key={`${service}-${index}`}>
-                {service}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  </div>
-)}
+        )}
       </div>
 
       <div className="search-bottom-viewport">
-        <nav className="bottom-navigation" aria-label="Primary navigation">
-          {footerItems.map(({ label, path, icon: Icon }) => {
-            const active = isFooterActive(path);
+        <nav
+          className="bottom-navigation"
+          aria-label="Primary navigation"
+        >
+          {footerItems.map(
+            ({ label, path, icon: Icon }) => {
+              const active =
+                isFooterActive(path);
 
-            return (
-              <button
-                type="button"
-                key={path}
-                className={`bottom-nav-item ${active ? "active" : ""}`}
-                aria-current={active ? "page" : undefined}
-                onClick={() => {
-                  if (location.pathname !== path) {
-                    navigate(path);
+              return (
+                <button
+                  type="button"
+                  key={path}
+                  className={`bottom-nav-item ${
+                    active ? "active" : ""
+                  }`}
+                  aria-current={
+                    active ? "page" : undefined
                   }
-                }}
-              >
-                <span className="bottom-nav-icon">
-                  <Icon />
-                </span>
-                <span>{label}</span>
-              </button>
-            );
-          })}
+                  onClick={() => {
+                    if (
+                      location.pathname !== path
+                    ) {
+                      navigate(path);
+                    }
+                  }}
+                >
+                  <span className="bottom-nav-icon">
+                    <Icon />
+                  </span>
+
+                  <span>{label}</span>
+                </button>
+              );
+            }
+          )}
         </nav>
       </div>
     </>

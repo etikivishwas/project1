@@ -4,6 +4,7 @@ import {
   FiCheckCircle,
   FiChevronRight,
   FiClock,
+  FiHeart,
   FiHome,
   FiMapPin,
   FiMessageSquare,
@@ -147,9 +148,14 @@ export default function UserScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [searchHistory, setSearchHistory] = useState([]);
+const [searchHistoryLoading, setSearchHistoryLoading] = useState(false);
+const [searchHistoryOpen, setSearchHistoryOpen] =
+  useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
-
+  const [savedVendorIds, setSavedVendorIds] = useState(new Set());
   const vendorsSectionRef = useRef(null);
+  const searchHeroRef = useRef(null);
 
   // ---------------------------------------------------------
   // FETCH VENDORS
@@ -356,6 +362,83 @@ useEffect(() => {
 
 }, []);
 
+// ---------------------------------------------------------
+// FETCH RECENT SEARCHES
+// ---------------------------------------------------------
+
+useEffect(() => {
+  const fetchSearchHistory = async () => {
+    const token =
+      localStorage.getItem("token") ||
+      sessionStorage.getItem("token");
+
+    if (!token) {
+      return;
+    }
+
+    try {
+      setSearchHistoryLoading(true);
+
+      const response = await fetch(
+        `${API_URL}/api/search-history`,
+        {
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const result = await safeJson(response);
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message || "Failed to fetch search history."
+        );
+      }
+
+      setSearchHistory(
+        Array.isArray(result.data)
+          ? result.data.slice(0, 3)
+          : []
+      );
+    } catch (error) {
+      console.error(
+        "Error fetching search history:",
+        error
+      );
+    } finally {
+      setSearchHistoryLoading(false);
+    }
+  };
+
+  fetchSearchHistory();
+}, []);
+
+useEffect(() => {
+  const handleOutsideClick = (event) => {
+    if (
+      searchHeroRef.current &&
+      !searchHeroRef.current.contains(event.target)
+    ) {
+      setSearchHistoryOpen(false);
+    }
+  };
+
+  document.addEventListener(
+    "mousedown",
+    handleOutsideClick
+  );
+
+  return () => {
+    document.removeEventListener(
+      "mousedown",
+      handleOutsideClick
+    );
+  };
+}, []);
+
+
   // ---------------------------------------------------------
   // FETCH VENDORS ON PAGE LOAD
   // ---------------------------------------------------------
@@ -363,7 +446,54 @@ useEffect(() => {
   useEffect(() => {
     fetchVendors();
   }, []);
+//fetch saved providers 
 
+useEffect(() => {
+  const fetchSavedProviders = async () => {
+    const token =
+      localStorage.getItem("token") ||
+      sessionStorage.getItem("token");
+
+    if (!token) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/user/saved-providers`,
+        {
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const result = await safeJson(response);
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message || "Failed to fetch saved providers."
+        );
+      }
+
+      const savedIds = new Set(
+        (Array.isArray(result.data) ? result.data : []).map(
+          (vendor) => Number(vendor.id)
+        )
+      );
+
+      setSavedVendorIds(savedIds);
+    } catch (error) {
+      console.error(
+        "Error fetching saved providers:",
+        error
+      );
+    }
+  };
+
+  fetchSavedProviders();
+}, []);
   // ---------------------------------------------------------
   // NORMALIZE VENDORS
   // ---------------------------------------------------------
@@ -461,10 +591,13 @@ useEffect(() => {
   // VISIBLE VENDORS
   // ---------------------------------------------------------
 
-  const visibleVendors = useMemo(
-    () => filteredVendors.slice(0, 4),
-    [filteredVendors]
+  const visibleVendors = useMemo(() => {
+  return [...filteredVendors].sort(
+    (a, b) =>
+      Number(b.isVerified) - Number(a.isVerified) ||
+      Number(b.rating || 0) - Number(a.rating || 0)
   );
+}, [filteredVendors]);
 
   // ---------------------------------------------------------
   // PROMO VENDOR
@@ -479,6 +612,58 @@ useEffect(() => {
     featuredVendors[0] ||
     normalizedVendors[0] ||
     null;
+
+    const toggleSavedProvider = async (vendor) => {
+  const token =
+    localStorage.getItem("token") ||
+    sessionStorage.getItem("token");
+
+  if (!token) {
+    navigate("/login");
+    return;
+  }
+
+  const vendorId = Number(vendor.id);
+  const isSaved = savedVendorIds.has(vendorId);
+
+  try {
+    const response = await fetch(
+      `${API_URL}/api/user/saved-providers/${vendorId}`,
+      {
+        method: isSaved ? "DELETE" : "POST",
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const result = await safeJson(response);
+
+    if (!response.ok || !result.success) {
+      throw new Error(
+        result.message || "Failed to update saved provider."
+      );
+    }
+
+    setSavedVendorIds((current) => {
+      const updated = new Set(current);
+
+      if (isSaved) {
+        updated.delete(vendorId);
+      } else {
+        updated.add(vendorId);
+      }
+
+      return updated;
+    });
+  } catch (error) {
+    console.error(
+      "Save provider error:",
+      error
+    );
+  }
+};
 
   // ---------------------------------------------------------
   // OPEN VENDOR
@@ -498,7 +683,7 @@ useEffect(() => {
 
   const handleCategoryClick = (category) => {
     if (category.name === "More") {
-      navigate("/vendorSearch");
+      navigate("/moreCategories");
       return;
     }
 
@@ -520,22 +705,76 @@ useEffect(() => {
       });
     });
   };
+// ---------------------------------------------------------
+// RECENT SEARCH
+// ---------------------------------------------------------
 
+const handleRecentSearch = (query) => {
+  const value = String(query || "").trim();
+
+  if (!value) {
+    return;
+  }
+
+  setSearchHistoryOpen(false);
+
+  navigate(
+    `/vendorSearch?search=${encodeURIComponent(value)}`
+  );
+};
+
+const clearSearchHistory = async () => {
+  const token =
+    localStorage.getItem("token") || sessionStorage.getItem("token");
+
+  if (!token) {
+    setSearchHistory([]);
+    setSearchHistoryOpen(false);
+    return;
+  }
+
+  const previous = searchHistory;
+  setSearchHistory([]);
+  setSearchHistoryOpen(false);
+
+  try {
+    const response = await fetch(`${API_URL}/api/search-history`, {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    // 204 has no body, so don't rely on result.success
+    if (!response.ok) {
+      const result = await safeJson(response);
+      throw new Error(result.message || `Clear failed (${response.status})`);
+    }
+  } catch (error) {
+    console.error("Clear search history error:", error);
+    setSearchHistory(previous); // roll back so the UI matches the server
+  }
+};
   // ---------------------------------------------------------
   // SEARCH
   // ---------------------------------------------------------
 
-  const handleSearch = (event) => {
-    event.preventDefault();
+ const handleSearch = (event) => {
+  event.preventDefault();
 
-    const value = search.trim();
+  const value = search.trim();
 
-    if (value) {
-      navigate(
-        `/vendorSearch?search=${encodeURIComponent(value)}`
-      );
-    }
-  };
+  if (!value) {
+    return;
+  }
+
+  setSearchHistoryOpen(false);
+
+  navigate(
+    `/vendorSearch?search=${encodeURIComponent(value)}`
+  );
+};
 
   // ---------------------------------------------------------
   // CONTACT VENDOR
@@ -652,28 +891,87 @@ useEffect(() => {
         <main className="home-content">
 
           {/* SEARCH */}
-          <section className="search-hero">
+<section
+  ref={searchHeroRef}
+  className="search-hero"
+>
 
-            <form
-              className="search-box"
-              onSubmit={handleSearch}
+  <form
+    className="search-box"
+    onSubmit={handleSearch}
+  >
+    <FiSearch className="search-icon" />
+
+   <input
+  type="search"
+  name="search"
+  placeholder="Search for services, providers, or locations..."
+  autoComplete="off"
+  value={search}
+  onChange={(event) =>
+    setSearch(event.target.value)
+  }
+  onFocus={() =>
+    setSearchHistoryOpen(true)
+  }
+/>
+  </form>
+
+  {/* RECENT SEARCHES */}
+  {searchHistoryOpen &&
+  !searchHistoryLoading &&
+  searchHistory.length > 0 && (
+      <div
+      className="recent-searches"
+      onMouseDown={(event) => event.preventDefault()}
+    >
+
+        <div className="recent-searches-header">
+          <span>
+            Recent
+          </span>
+
+          <button
+  type="button"
+  onPointerDown={() => console.log("pointerdown on Clear")}
+  onClick={() => {
+    console.log("click on Clear");
+    clearSearchHistory();
+  }}
+>
+  Clear
+</button>
+        </div>
+
+        <div className="recent-search-list">
+
+          {searchHistory.map((item) => (
+            <button
+              type="button"
+              key={item.id}
+              className="recent-search-item"
+              onClick={() =>
+                handleRecentSearch(
+                  item.searchQuery
+                )
+              }
             >
-              <FiSearch className="search-icon" />
+              <FiClock />
 
-              <input
-                type="search"
-                name="search"
-                placeholder="Search for services, providers, or locations..."
-                autoComplete="off"
-                value={search}
-                onChange={(event) =>
-                  setSearch(event.target.value)
-                }
-              />
-            </form>
+              <span>
+                {item.searchQuery}
+              </span>
 
-          </section>
+              <FiChevronRight />
+            </button>
+          ))}
 
+        </div>
+
+      </div>
+    )}
+
+</section>
           {/* =================================================
               FEATURED VENDORS
           ================================================= */}
@@ -871,7 +1169,7 @@ useEffect(() => {
             <div className="vendor-heading">
 
               <h2>
-                Top Verified Vendors Near You
+              Vendors Near You
               </h2>
 
             </div>
@@ -1002,6 +1300,32 @@ useEffect(() => {
                           vendor={vendor}
                           className="vendor-image"
                         />
+
+                        <button
+  type="button"
+  className={`save-provider-button ${
+    savedVendorIds.has(Number(vendor.id))
+      ? "saved"
+      : ""
+  }`}
+  onClick={(event) => {
+    event.stopPropagation();
+    toggleSavedProvider(vendor);
+  }}
+  aria-label={
+    savedVendorIds.has(Number(vendor.id))
+      ? "Remove from saved providers"
+      : "Save provider"
+  }
+>
+  <FiHeart
+    fill={
+      savedVendorIds.has(Number(vendor.id))
+        ? "currentColor"
+        : "none"
+    }
+  />
+</button>
 
                         <div className="vendor-name-row">
 

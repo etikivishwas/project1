@@ -26,20 +26,20 @@ const getVendors = async (req, res) => {
   (
     SELECT GROUP_CONCAT(DISTINCT vs.name SEPARATOR '||')
     FROM vendor_services vs
-    WHERE vs.vendor_id = vendors.id
+    WHERE vs.vendor_id = v.id
       AND vs.status = 'active'
   ) AS subcategories,
 
   (
     SELECT MIN(vs.price_min)
     FROM vendor_services vs
-    WHERE vs.vendor_id = vendors.id
+    WHERE vs.vendor_id = v.id
       AND vs.status = 'active'
   ) AS starting_price
 
-FROM vendors
+FROM vendors v
 WHERE is_active = TRUE
-ORDER BY is_premium DESC, rating DESC
+ORDER BY v.is_premium DESC, v.rating DESC
     `);
 
     res.status(200).json({

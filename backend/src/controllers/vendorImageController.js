@@ -24,29 +24,62 @@ const streamVendorImage = async (req, res) => {
   const vendorId = Number(req.params.vendorId);
 
   if (!Number.isInteger(vendorId) || vendorId <= 0) {
-    return res.status(400).json({ success: false, message: "Invalid vendor ID." });
+    return res.status(400).json({
+      success: false,
+      message: "Invalid vendor ID.",
+    });
   }
 
   try {
     const [rows] = await db.query(
       `
-        SELECT image_blob, image_mime_type, image_etag
+        SELECT
+          image_url,
+          image_blob,
+          image_mime_type,
+          image_etag
         FROM vendors
         WHERE id = ?
-          AND image_blob IS NOT NULL
         LIMIT 1
       `,
       [vendorId]
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({ success: false, message: "Vendor image was not found." });
+      return res.status(404).json({
+        success: false,
+        message: "Vendor image was not found.",
+      });
     }
 
-    return sendStoredImage(req, res, rows[0], "image_mime_type");
+    const vendor = rows[0];
+
+    // New images: Cloudinary
+    if (vendor.image_url) {
+      return res.redirect(vendor.image_url);
+    }
+
+    // Old images: MySQL
+    if (vendor.image_blob) {
+      return sendStoredImage(
+        req,
+        res,
+        vendor,
+        "image_mime_type"
+      );
+    }
+
+    return res.status(404).json({
+      success: false,
+      message: "Vendor image was not found.",
+    });
   } catch (error) {
     console.error("Stream vendor image error:", error);
-    return res.status(500).json({ success: false, message: "Vendor image could not be loaded." });
+
+    return res.status(500).json({
+      success: false,
+      message: "Vendor image could not be loaded.",
+    });
   }
 };
 

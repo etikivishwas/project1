@@ -26,7 +26,8 @@ import UserSettings from "./pages/UserSettings/UserSettings.jsx";
 import ChangePassword from "./pages/UserSettings/ChangePassword.jsx";
 import TwoFactorAuthentication from "./pages/UserSettings/TwoFactorAuthentication";
 import ProtectedRoute from "./components/ProtectedRoute";
-
+import SavedProviders from "./pages/savedProviders/SavedProviders.jsx";
+import MoreCategories from "./pages/MoreCategories/MoreCategories.jsx";
 import "./theme.css";
 
 
@@ -97,6 +98,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        
 
         <Route
           path="/userProfile"
@@ -106,6 +108,15 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+      <Route
+  path="/savedProviders"
+  element={
+    <ProtectedRoute>
+      <SavedProviders />
+    </ProtectedRoute>
+  }
+/>
 
         <Route
           path="/helpSupport"
@@ -176,6 +187,15 @@ function App() {
           }
         />
         <Route path="/vendor/:vendorId" element={<VendorDetails />} />
+
+        <Route
+  path="/moreCategories"
+  element={
+    <ProtectedRoute>
+      <MoreCategories />
+    </ProtectedRoute>
+  }
+/>
         {/* =========================================
             UNKNOWN ROUTES
             ========================================= */}

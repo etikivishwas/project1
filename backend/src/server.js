@@ -22,7 +22,9 @@ const vendorReviewRoutes =
   require(
     "./routes/vendorReviewRoutes"
   );
-
+const savedProviderRoutes = require("./routes/savedProviderRoutes");
+const searchHistoryRoutes =
+  require("./routes/searchHistory.routes");
 const app = express();
 
 const allowedOrigins = [
@@ -73,6 +75,13 @@ app.use(
   verifyToken,
   userLocationRoutes
 );
+app.use(
+  "/api/user/saved-providers",
+  verifyToken,
+  savedProviderRoutes
+);
+app.use("/api/history", historyRoutes);
+app.use("/api/search-history", searchHistoryRoutes);
 
 app.use(
   "/api/vendor-directory",

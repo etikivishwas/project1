@@ -83,8 +83,7 @@ const getVendorById = async (req, res) => {
         FROM vendors v
         LEFT JOIN vendor_categories vc ON vc.id = v.category_id
         WHERE v.id = ?
-          AND v.is_active = 1
-          AND v.registration_status = 'approved'
+  AND v.is_active = 1
         LIMIT 1
       `,
       [vendorId]

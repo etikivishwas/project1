@@ -2,7 +2,7 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 
 const db = require("../config/database.js");
-
+const cloudinary = require("../config/cloudinary.js");
 const PASSWORD_SALT_ROUNDS = 12;
 
 const cleanText = (value) => {
@@ -275,20 +275,38 @@ const registerVendor = async (req, res) => {
     const closingTime = cleanText(req.body.closingTime);
     const services = parseServices(req.body.services);
 
-    // This controller expects multer.memoryStorage().
-    const logoBuffer = req.file?.buffer || null;
-    const logoMimeType = req.file?.mimetype || null;
-    const logoOriginalName = req.file?.originalname || null;
-    const logoSize = req.file?.size || null;
-    const logoEtag = logoBuffer
-      ? crypto
-          .createHash("sha256")
-          .update(logoBuffer)
-          .digest("hex")
-      : null;
+   // Multer uses memoryStorage(), so the image is available as a buffer.
+const logoBuffer = req.file?.buffer || null;
 
-    // New vendor images are streamed through /api/images.
-    const logoUrl = null;
+let logoUrl = null;
+let logoEtag = null;
+
+if (logoBuffer) {
+  logoEtag = crypto
+    .createHash("sha256")
+    .update(logoBuffer)
+    .digest("hex");
+
+  const uploadResult = await new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: "tedo/vendors",
+        resource_type: "image",
+      },
+      (error, result) => {
+        if (error) {
+          return reject(error);
+        }
+
+        resolve(result);
+      }
+    );
+
+    uploadStream.end(logoBuffer);
+  });
+
+  logoUrl = uploadResult.secure_url;
+}
 
     connection = await db.getConnection();
     await connection.beginTransaction();
@@ -429,11 +447,11 @@ const registerVendor = async (req, res) => {
         category.id,
         aboutBusiness,
         logoUrl,
-        logoBuffer,
-        logoMimeType,
-        logoOriginalName,
-        logoSize,
-        logoEtag,
+null,
+null,
+null,
+null,
+logoEtag,
         mobileNumber,
         whatsapp,
         email,
@@ -451,9 +469,7 @@ const registerVendor = async (req, res) => {
     );
 
     const vendorId = vendorResult.insertId;
-    const generatedLogoUrl = logoBuffer
-      ? `/api/images/vendors/${vendorId}/main`
-      : null;
+    const generatedLogoUrl = logoUrl;
 
     await connection.query(
       `
@@ -605,15 +621,7 @@ const getMyVendorRegistration = async (req, res) => {
           v.maximum_price AS maxPrice,
           v.opening_time AS openingTime,
           v.closing_time AS closingTime,
-          CASE
-            WHEN v.image_blob IS NOT NULL
-              THEN CONCAT(
-                '/api/images/vendors/',
-                v.id,
-                '/main'
-              )
-            ELSE NULL
-          END AS logoUrl,
+          v.image_url AS logoUrl,
           v.registration_status AS registrationStatus,
           vc.id AS categoryId,
           vc.name AS categoryName,
