@@ -18,7 +18,7 @@ import logo from "../../assets/logo.jpeg";
 import "./VendorSearch.css";
 import { FaWhatsapp } from "react-icons/fa";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL || "";
 
 const fallbackVendorImage =
   "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=500&q=80";

@@ -22,7 +22,7 @@ import { FaStore } from "react-icons/fa";
 import logo from "../../assets/logo.jpeg";
 import "./VendorRegistration.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL || "";
 const MAX_LOGO_SIZE = 5 * 1024 * 1024;
 const ALLOWED_LOGO_TYPES = ["image/jpeg", "image/png"];
 const DEFAULT_SERVICES = [
