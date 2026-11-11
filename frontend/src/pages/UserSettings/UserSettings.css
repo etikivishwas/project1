@@ -3,13 +3,35 @@
 :root {
   --settings-width: 430px;
   --settings-footer-height: 76px;
-  --settings-ink: #111923;
-  --settings-muted: #59616c;
-  --settings-line: #e4e6ea;
-  --settings-bg: #f7f8fd;
-  --settings-blue: #2876df;
-  --settings-navy: #06172b;
-  --settings-red: #b7262c;
+
+  /* Client palette */
+  --color-primary: #0f766e;
+  --color-primary-dark: #0b5f59;
+  --color-primary-deep: #084c48;
+  --color-primary-soft: #dcefeb;
+  --color-accent: #ff8a4c;
+  --color-accent-dark: #e96f32;
+  --color-accent-soft: #fff0e8;
+  --color-text: #18323b;
+  --color-muted: #64777d;
+  --color-background: #ffffff;
+  --color-surface: #f0f7f6;
+  --color-line: #d8e7e4;
+  --color-danger: #b7262c;
+  --color-danger-soft: #fff2f3;
+
+  /* Existing aliases retained for compatibility */
+  --settings-ink: var(--color-text);
+  --settings-muted: var(--color-muted);
+  --settings-line: var(--color-line);
+  --settings-bg: var(--color-surface);
+  --settings-blue: var(--color-accent);
+  --settings-navy: var(--color-primary);
+  --settings-red: var(--color-danger);
+
+  --shadow-sm: 0 5px 16px rgba(24, 50, 59, 0.07);
+  --shadow-md: 0 12px 28px rgba(24, 50, 59, 0.12);
+  --focus-ring: 0 0 0 3px rgba(255, 138, 76, 0.25);
 }
 
 * {
@@ -29,7 +51,7 @@ body,
 
 body {
   overflow-x: hidden;
-  background: #edf1f7;
+  background: #e7f0ef;
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -42,6 +64,13 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
+button:focus-visible,
+input:focus-visible,
+[role="button"]:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
 .settings-page {
   width: 100%;
   max-width: var(--settings-width);
@@ -51,10 +80,10 @@ button {
     var(--settings-footer-height) + 34px + env(safe-area-inset-bottom, 0px)
   );
   overflow-x: hidden;
-  color: var(--settings-ink);
-  background: var(--settings-bg);
-  border-right: 1px solid #e0e4ea;
-  border-left: 1px solid #e0e4ea;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-line);
+  border-left: 1px solid var(--color-line);
 }
 
 .settings-header {
@@ -66,9 +95,9 @@ button {
   align-items: center;
   height: 82px;
   padding: 0 20px;
-  background: rgba(248, 249, 253, 0.98);
-  border-bottom: 1px solid #d9dde4;
-  box-shadow: 0 2px 4px rgba(20, 34, 49, 0.04);
+  background: rgba(255, 255, 255, 0.97);
+  border-bottom: 1px solid rgba(216, 231, 228, 0.92);
+  box-shadow: 0 4px 16px rgba(24, 50, 59, 0.05);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
 }
@@ -76,7 +105,7 @@ button {
 .settings-header h1 {
   margin: 0;
   overflow: hidden;
-  color: #101923;
+  color: var(--color-text);
   font-size: 25px;
   font-weight: 800;
   line-height: 1.15;
@@ -92,12 +121,20 @@ button {
   width: 40px;
   height: 40px;
   padding: 0;
-  color: #162331;
-  font-size: 24px;
-  background: transparent;
-  border: 0;
+  color: var(--color-primary);
+  font-size: 21px;
+  background: var(--color-background);
+  border: 1px solid var(--color-line);
   border-radius: 50%;
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
+  transition: color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+.settings-back:hover {
+  color: #ffffff;
+  background: var(--color-primary);
+  transform: translateY(-1px);
 }
 
 .settings-header-space {
@@ -107,39 +144,40 @@ button {
 
 .settings-content {
   display: grid;
-  gap: 34px;
-  padding: 18px 18px 30px;
+  gap: 24px;
+  padding: 22px 18px 30px;
 }
 
 .settings-card {
   overflow: hidden;
-  background: #ffffff;
-  border: 1px solid #e7e8ec;
-  border-radius: 14px;
-  box-shadow: 0 3px 9px rgba(25, 36, 50, 0.05);
+  background: var(--color-background);
+  border: 1px solid var(--color-line);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
 }
 
 .settings-card-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
   min-height: 66px;
   padding: 0 19px;
-  border-bottom: 1px solid var(--settings-line);
+  background: linear-gradient(90deg, var(--color-primary-soft), #f7fbfa);
+  border-bottom: 1px solid var(--color-line);
 }
 
 .settings-card-title svg {
   width: 22px;
   height: 22px;
   flex: none;
-  color: #747b84;
+  color: var(--color-primary);
   stroke-width: 2;
 }
 
 .settings-card-title h2 {
   margin: 0;
-  color: #111923;
-  font-size: 21px;
+  color: var(--color-text);
+  font-size: 19px;
   font-weight: 800;
   letter-spacing: -0.4px;
 }
@@ -155,9 +193,9 @@ button {
   padding: 16px 19px;
   color: inherit;
   text-align: left;
-  background: #ffffff;
+  background: var(--color-background);
   border: 0;
-  border-bottom: 1px solid #eceef1;
+  border-bottom: 1px solid #e8f0ee;
 }
 
 .settings-row:last-child,
@@ -167,19 +205,24 @@ button {
 
 .settings-link-row {
   cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease;
 }
 
 .settings-link-row:hover,
 .settings-link-row:focus-visible {
-  background: #fafbfc;
+  background: var(--color-surface);
   outline: none;
+}
+
+.settings-link-row:active {
+  transform: scale(0.995);
 }
 
 .settings-link-row > svg {
   width: 20px;
   height: 20px;
   flex: none;
-  color: #747b83;
+  color: var(--color-primary);
   stroke-width: 2.2;
 }
 
@@ -191,15 +234,15 @@ button {
 }
 
 .settings-row-copy strong {
-  color: #27313c;
-  font-size: 16px;
-  font-weight: 500;
+  color: var(--color-text);
+  font-size: 15px;
+  font-weight: 650;
   line-height: 1.25;
 }
 
 .settings-row-copy span {
-  color: #4f5863;
-  font-size: 13px;
+  color: var(--color-muted);
+  font-size: 12px;
   line-height: 1.35;
 }
 
@@ -223,9 +266,9 @@ button {
   position: absolute;
   inset: 0;
   display: block;
-  background: #cfe0fa;
+  background: #c9d9d6;
   border-radius: 999px;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .settings-switch-thumb {
@@ -235,19 +278,19 @@ button {
   width: 23px;
   height: 23px;
   background: #ffffff;
-  border: 2px solid #77808a;
+  border: 2px solid #82918f;
   border-radius: 50%;
-  box-shadow: 0 2px 5px rgba(17, 32, 48, 0.16);
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 2px 5px rgba(24, 50, 59, 0.16);
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .settings-switch input:checked + .settings-switch-track {
-  background: var(--settings-navy);
+  background: var(--color-primary);
 }
 
 .settings-switch input:checked + .settings-switch-track .settings-switch-thumb {
-  border-color: var(--settings-blue);
-  background: var(--settings-blue);
+  border-color: var(--color-accent);
+  background: var(--color-accent);
   transform: translateX(23px);
 }
 
@@ -266,13 +309,12 @@ button {
 }
 
 .settings-switch input:focus-visible + .settings-switch-track {
-  outline: 3px solid rgba(40, 118, 223, 0.2);
-  outline-offset: 2px;
+  box-shadow: var(--focus-ring);
 }
 
 .settings-switch input:disabled + .settings-switch-track {
   cursor: wait;
-  opacity: 0.7;
+  opacity: 0.65;
 }
 
 .settings-save-message {
@@ -280,10 +322,14 @@ button {
   align-items: center;
   justify-content: center;
   gap: 7px;
-  margin: -14px 0 -12px;
-  color: #52606d;
+  margin: -8px 0;
+  padding: 9px 12px;
+  color: var(--color-primary-dark);
   font-size: 11px;
   text-align: center;
+  background: var(--color-primary-soft);
+  border: 1px solid #bfded9;
+  border-radius: 10px;
 }
 
 .settings-save-message svg {
@@ -298,13 +344,23 @@ button {
   justify-content: center;
   gap: 10px;
   margin-top: 0;
-  color: var(--settings-red);
+  color: var(--color-danger);
   font-size: 15px;
   font-weight: 700;
-  background: #fff9fa;
-  border: 1px solid #f4d9dc;
+  background: var(--color-danger-soft);
+  border: 1px solid #f0cfd3;
   border-radius: 13px;
   cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.delete-account-button:hover {
+  background: #ffe7ea;
+  border-color: #e9b7bd;
+}
+
+.delete-account-button:active {
+  transform: scale(0.99);
 }
 
 .delete-account-button svg {
@@ -334,9 +390,11 @@ button {
   align-items: center;
   gap: 4px;
   padding: 8px 18px calc(8px + env(safe-area-inset-bottom, 0px));
-  background: #ffffff;
-  border-top: 1px solid #e1e5ea;
-  box-shadow: 0 -4px 16px rgba(17, 31, 45, 0.05);
+  background: rgba(255, 255, 255, 0.98);
+  border-top: 1px solid var(--color-line);
+  box-shadow: 0 -6px 22px rgba(24, 50, 59, 0.09);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   pointer-events: auto;
 }
 
@@ -350,7 +408,7 @@ button {
   justify-content: center;
   gap: 3px;
   padding: 3px 4px;
-  color: #27313d;
+  color: var(--color-muted);
   background: transparent;
   border: 0;
   cursor: pointer;
@@ -361,9 +419,10 @@ button {
   height: 31px;
   display: grid;
   place-items: center;
-  color: #27313d;
+  color: var(--color-muted);
   background: transparent;
   border-radius: 999px;
+  transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .settings-nav-icon svg {
@@ -375,7 +434,7 @@ button {
 .settings-nav-label {
   max-width: 100%;
   overflow: hidden;
-  color: #27313d;
+  color: var(--color-muted);
   font-size: 10px;
   font-weight: 600;
   text-overflow: ellipsis;
@@ -383,14 +442,14 @@ button {
 }
 
 .settings-nav-item.active .settings-nav-icon {
-  color: #06281c;
-  background: #54ee9a;
-  box-shadow: 0 5px 14px rgba(84, 238, 154, 0.3);
+  color: #ffffff;
+  background: var(--color-primary);
+  box-shadow: 0 5px 14px rgba(15, 118, 110, 0.3);
 }
 
 .settings-nav-item.active .settings-nav-label {
-  color: #10251c;
-  font-weight: 700;
+  color: var(--color-primary-dark);
+  font-weight: 800;
 }
 
 .delete-modal-backdrop {
@@ -401,15 +460,19 @@ button {
   align-items: flex-end;
   justify-content: center;
   padding: 18px;
-  background: rgba(4, 15, 27, 0.58);
+  background: rgba(8, 50, 48, 0.62);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
 }
 
 .delete-modal {
   width: min(100%, 394px);
   padding: 24px 20px calc(20px + env(safe-area-inset-bottom, 0px));
   text-align: center;
-  background: #ffffff;
+  background: var(--color-background);
+  border: 1px solid var(--color-line);
   border-radius: 20px;
+  box-shadow: 0 22px 60px rgba(8, 50, 48, 0.28);
 }
 
 .delete-modal-icon {
@@ -418,21 +481,21 @@ button {
   width: 52px;
   height: 52px;
   margin: 0 auto;
-  color: var(--settings-red);
+  color: var(--color-danger);
   font-size: 24px;
-  background: #fff0f1;
+  background: var(--color-danger-soft);
   border-radius: 50%;
 }
 
 .delete-modal h2 {
   margin: 14px 0 7px;
-  color: #17212c;
+  color: var(--color-text);
   font-size: 20px;
 }
 
 .delete-modal > p {
   margin: 0;
-  color: #66717d;
+  color: var(--color-muted);
   font-size: 12px;
   line-height: 1.5;
 }
@@ -440,9 +503,36 @@ button {
 .delete-modal-error {
   margin-top: 12px !important;
   padding: 9px;
-  color: var(--settings-red) !important;
-  background: #fff1f1;
+  color: var(--color-danger) !important;
+  background: var(--color-danger-soft);
+  border: 1px solid #f0cfd3;
   border-radius: 8px;
+}
+
+.delete-modal-field {
+  display: grid;
+  gap: 6px;
+  margin-top: 14px;
+  color: var(--color-text);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.delete-modal-field input {
+  width: 100%;
+  height: 43px;
+  padding: 0 11px;
+  color: var(--color-text);
+  background: var(--color-background);
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  outline: none;
+}
+
+.delete-modal-field input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(255, 138, 76, 0.18);
 }
 
 .delete-modal-actions {
@@ -461,15 +551,19 @@ button {
 }
 
 .delete-cancel {
-  color: #27313c;
-  background: #f2f4f6;
-  border: 0;
+  color: var(--color-primary-dark);
+  background: var(--color-primary-soft);
+  border: 1px solid #bfded9;
 }
 
 .delete-confirm {
   color: #ffffff;
-  background: var(--settings-red);
+  background: var(--color-danger);
   border: 0;
+}
+
+.delete-confirm:hover:not(:disabled) {
+  background: #9d1f25;
 }
 
 .delete-modal-actions button:disabled {
@@ -495,16 +589,12 @@ button {
   }
 
   .settings-content {
-    gap: 26px;
+    gap: 20px;
     padding-right: 13px;
     padding-left: 13px;
   }
 
-  .settings-card-title {
-    padding-right: 15px;
-    padding-left: 15px;
-  }
-
+  .settings-card-title,
   .settings-row,
   .settings-link-row {
     padding-right: 15px;
@@ -512,11 +602,11 @@ button {
   }
 
   .settings-row-copy strong {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .settings-row-copy span {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .settings-bottom-navigation {
@@ -527,7 +617,7 @@ button {
 
 @media (min-width: 431px) {
   .settings-page {
-    box-shadow: 0 0 36px rgba(17, 32, 48, 0.09);
+    box-shadow: 0 0 40px rgba(24, 50, 59, 0.11);
   }
 }
 
@@ -546,30 +636,4 @@ button {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-}
-
-.delete-modal-field {
-  display: grid;
-  gap: 6px;
-  margin-top: 14px;
-  color: #34404c;
-  font-size: 11px;
-  font-weight: 700;
-  text-align: left;
-}
-
-.delete-modal-field input {
-  width: 100%;
-  height: 43px;
-  padding: 0 11px;
-  color: #26313d;
-  background: #ffffff;
-  border: 1px solid #cfd7df;
-  border-radius: 8px;
-  outline: none;
-}
-
-.delete-modal-field input:focus {
-  border-color: #b7262c;
-  box-shadow: 0 0 0 3px rgba(183, 38, 44, 0.1);
 }
